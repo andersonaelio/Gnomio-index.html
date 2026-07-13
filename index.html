@@ -734,12 +734,12 @@
       </div>
       <div class="chat-hint">Entendo frases como <b>"gastei 30 no uber"</b>, <b>"paguei 120 de conta de luz ontem"</b>, <b>"recebi 500 de freela"</b> e <b>"tenho 6.040,78 guardado no mercado pago"</b>.</div>
       <div id="iaConfigBox" style="display:none;">
-        <input type="password" id="iaKey" placeholder="cole sua chave da API do Gemini (AIza...)">
+        <input type="password" id="iaKey" placeholder="cole sua chave da API do Groq (gsk_...)">
         <div class="ia-actions">
           <button id="iaSalvar" type="button">salvar</button>
           <button id="iaRemover" type="button">remover</button>
         </div>
-        <div class="chat-hint" style="margin-bottom:0;">crie a chave <b>de graça</b> em <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> — cai direto na tela da chave, sem precisar caçar menu. ela fica salva só neste navegador (não vai no backup). free tier do Gemini: sem cartão, sem custo pra uso pessoal.</div>
+        <div class="chat-hint" style="margin-bottom:0;">crie a chave <b>de graça</b> em <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> — cai direto na tela da chave, sem cartão. free tier do Groq: rápido e sem custo pra uso pessoal.</div>
       </div>
     </div>
 
@@ -1956,12 +1956,12 @@ function ajustarSaldoContaSilencioso(conta, valor){
   saveState(); checkConquistas();
 }
 
-// ---------- cérebro IA (Gemini Flash, opcional, free tier) ----------
-const IA_KEY_LS = 'gnomio_geminikey';
+// ---------- cérebro IA (Groq / gpt-oss-20b, opcional, free tier) ----------
+const IA_KEY_LS = 'gnomio_groqkey';
 function iaKey(){ return localStorage.getItem(IA_KEY_LS) || ''; }
 function renderIaStatus(){
   const el = document.getElementById('iaStatusTxt');
-  if(el) el.textContent = iaKey() ? 'cérebro: IA conectada (Gemini)' : 'cérebro: regras locais';
+  if(el) el.textContent = iaKey() ? 'cérebro: IA conectada (Groq)' : 'cérebro: regras locais';
   const btn = document.getElementById('iaConfigBtn');
   if(btn) btn.textContent = iaKey() ? 'config da IA' : 'conectar IA';
 }
@@ -2040,26 +2040,26 @@ function aplicarAcoesIA(acoes){
   return idsCriados;
 }
 
-const GEMINI_MODEL = 'gemini-3.5-flash';
+const GROQ_MODEL = 'openai/gpt-oss-20b';
 
-async function chamarGemini(frase){
+async function chamarGroq(frase){
   const historico = iaHist.slice(-6);
-  const contents = historico.concat([{role:'user', parts:[{text:'[dados atuais: '+iaContexto()+']\nmensagem: '+frase}]}]);
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent';
-  return fetch(url, {
+  const messages = [{role:'system', content:IA_SYS}]
+    .concat(historico)
+    .concat([{role:'user', content:'[dados atuais: '+iaContexto()+']\nmensagem: '+frase}]);
+  return fetch('https://api.groq.com/openai/v1/chat/completions', {
     method:'POST',
     headers:{
       'content-type':'application/json',
-      'x-goog-api-key': iaKey()
+      'authorization': 'Bearer '+iaKey()
     },
     body: JSON.stringify({
-      systemInstruction: {parts:[{text:IA_SYS}]},
-      contents,
-      generationConfig: {
-        responseMimeType:'application/json',
-        maxOutputTokens:2048,
-        thinkingConfig:{thinkingLevel:'low'}
-      }
+      model: GROQ_MODEL,
+      messages,
+      response_format: {type:'json_object'},
+      max_completion_tokens: 2048,
+      reasoning_effort: 'low',
+      reasoning_format: 'hidden'
     })
   });
 }
@@ -2068,16 +2068,16 @@ async function gnomioIA(frase){
   const pensando = addChatBubble('…', 'bot');
   const setTxt = (t)=>{ pensando.querySelector('.txt').innerHTML = t; };
   try{
-    let r = await chamarGemini(frase);
+    let r = await chamarGroq(frase);
     if(r.status===503){
-      // pico de demanda momentâneo do lado do Google — tenta de novo uma vez antes de desistir
+      // pico de demanda momentâneo do lado do Groq — tenta de novo uma vez antes de desistir
       await new Promise(res=>setTimeout(res, 1500));
-      r = await chamarGemini(frase);
+      r = await chamarGroq(frase);
     }
-    if(r.status===400 || r.status===403){
+    if(r.status===401 || r.status===403){
       const errBody = await r.json().catch(()=>null);
       const msg = errBody && errBody.error && errBody.error.message || '';
-      console.error('Gemini erro', r.status, msg);
+      console.error('Groq erro', r.status, msg);
       setTxt('essa chave não abre esse cofre ('+(msg?esc(msg):'chave inválida')+'). confere lá no "config da IA".');
       return;
     }
@@ -2093,23 +2093,21 @@ async function gnomioIA(frase){
     }
     if(!r.ok){
       const errText = await r.text().catch(()=>'');
-      console.error('Gemini http error', r.status, errText);
+      console.error('Groq http error', r.status, errText);
       throw new Error('http '+r.status+' '+errText.slice(0,200));
     }
     const data = await r.json();
-    let txt = (data.candidates && data.candidates[0] && data.candidates[0].content &&
-               data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
-               data.candidates[0].content.parts[0].text) || '';
+    let txt = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
     txt = txt.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
     const out = JSON.parse(txt);
     const idsCriados = aplicarAcoesIA(out.acoes);
     pensando.remove();
     addChatBubble(esc(out.resposta || 'anotado.'), 'bot', ICON_GOBLIN, idsCriados);
-    iaHist.push({role:'user', parts:[{text:frase}]});
-    iaHist.push({role:'model', parts:[{text:txt}]});
+    iaHist.push({role:'user', content:frase});
+    iaHist.push({role:'assistant', content:txt});
     if(iaHist.length>12) iaHist = iaHist.slice(-12);
   }catch(err){
-    console.error('Gemini falhou', err);
+    console.error('Groq falhou', err);
     pensando.remove();
     addChatBubble('sem sinal com o cérebro grande ('+esc(String(err&&err.message||err))+') — resolvi aqui com as regras locais mesmo.', 'bot');
     processarFrase(frase);
