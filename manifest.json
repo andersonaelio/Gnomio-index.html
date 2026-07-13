@@ -1,0 +1,16 @@
+{
+  "name": "Gnômio — o goblin da sua grana",
+  "short_name": "Gnômio",
+  "description": "Gestão financeira pessoal com um goblin sarcástico de guarda.",
+  "start_url": "./gnomio-v2.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#16382a",
+  "theme_color": "#16382a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

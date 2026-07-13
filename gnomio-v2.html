@@ -1,0 +1,2406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gnômio</title>
+<meta name="description" content="Gnômio — seu cofre pessoal tem dono agora. Controle de gastos 100% local, com um goblin de olho.">
+<meta property="og:title" content="Gnômio">
+<meta property="og:description" content="Seu cofre pessoal tem dono agora. Controle de gastos 100% local.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%2316382a'/%3E%3Cpath d='M13 48 L31 41 L31 56 Z' fill='%236ec94d' stroke='%2320160a' stroke-width='4'/%3E%3Cpath d='M83 48 L65 41 L65 56 Z' fill='%236ec94d' stroke='%2320160a' stroke-width='4'/%3E%3Ccircle cx='48' cy='54' r='23' fill='%236ec94d' stroke='%2320160a' stroke-width='4'/%3E%3Cpath d='M25 44 Q34 12 62 14 Q60 20 56 22 Q74 24 71 44 Z' fill='%23ef6b4c' stroke='%2320160a' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16382a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gnômio">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Cofre Esmeralda — fundo verde saturado, cards quase-pretos, dourado escasso */
+    --lvl0:#0a0908; /* containers (nav) — o mais escuro */
+    --lvl1:#0e0d0c; /* superfície padrão dos cards */
+    --lvl2:#0e0d0c; /* cards */
+    --lvl3:#151310; /* hero / elemento mais elevado */
+    --bg:#16382a;
+    --panel:var(--lvl2);
+    --panel2:var(--lvl1);
+    --text:#f2ead4;
+    --muted:#b3ab98;
+    --muted2:#82796a;
+    --good:#7fd98f;
+    --bad:#ef5b4e;
+    /* dourado — reservado: saldo principal, ação primária, conquista. nada mais usa isso puro. */
+    --accent:#e6b93d;
+    --gold-deep:#a9791f;
+    --accent2:#dcae3a;
+    --accent2-hover:#f0c65a;
+    --on-accent2:#231a06;
+    --goblin:#7fd98f;
+    /* bordas discretas — linha de baixa opacidade, não contorno colorido */
+    --border:rgba(255,240,210,0.07);
+    --border2:rgba(255,240,210,0.13);
+    --radius:14px;
+    --f-head:'Baloo 2', sans-serif;
+    --f-body:'Nunito', sans-serif;
+    --ease-out:cubic-bezier(0.22, 1, 0.36, 1);
+    /* elevação física — sombra em camadas, nunca glow */
+    --elev-1:0 1px 0 rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.22), 0 8px 14px -10px rgba(0,0,0,0.5);
+    --elev-2:0 1px 0 rgba(0,0,0,0.35), 0 3px 6px rgba(0,0,0,0.28), 0 14px 22px -14px rgba(0,0,0,0.6);
+    /* névoa da toca — esmeralda saturado, fluido, cards flutuam nele bem mais escuros */
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:var(--f-body);
+    background:
+      radial-gradient(115% 85% at 18% -6%, #1d4a37 0%, transparent 58%),
+      radial-gradient(110% 95% at 88% 108%, #0f2a20 0%, transparent 62%),
+      linear-gradient(165deg, #17392a, #133023 55%, #163527);
+    background-attachment:fixed;
+    background-size:220% 220%, 220% 220%, 100% 100%;
+    animation:mistDrift 46s ease-in-out infinite alternate;
+    color:var(--text);
+    min-height:100vh;
+    min-height:100svh;
+  }
+  @keyframes mistDrift{
+    0%{background-position:0% 0%, 100% 100%, 0 0;}
+    100%{background-position:8% 6%, 92% 94%, 0 0;}
+  }
+  @media (prefers-reduced-motion: reduce){ body{animation:none;} }
+  .wrap{max-width:980px; margin:0 auto; padding:28px 20px 80px; position:relative; z-index:2;}
+  a{color:var(--accent);}
+
+  /* SPLASH */
+  #splash{
+    position:fixed; inset:0; background:var(--bg); z-index:999;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    transition:opacity .5s ease, visibility .5s ease;
+  }
+  #splash.hide{opacity:0; visibility:hidden; pointer-events:none;}
+  #splash .face-wrap{width:150px; height:150px; animation:bob 2.4s ease-in-out infinite;}
+  @keyframes bob{
+    0%,100%{transform:translateY(0) rotate(-2deg);}
+    50%{transform:translateY(-14px) rotate(2deg);}
+  }
+  #splash h1{font-family:var(--f-head); font-weight:800; font-size:2rem; margin:0; letter-spacing:.02em;}
+  #splash p{color:var(--muted); margin:0; font-size:.9rem;}
+  #splash button{
+    margin-top:10px; background:var(--accent2); color:var(--on-accent2); border:none;
+    padding:13px 30px; border-radius:999px; font-weight:800; font-family:var(--f-head); font-size:.95rem; cursor:pointer;
+  }
+
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px;}
+  header .titlewrap{display:flex; align-items:center; gap:10px;}
+  header .titlewrap .icon{width:36px; height:36px; flex-shrink:0;}
+  header h1{font-family:var(--f-head); font-weight:800; font-size:1.5rem; margin:0; line-height:1; color:var(--text);}
+  header .sub{color:var(--muted); font-size:.85rem; margin-top:3px;}
+  .month-pill{background:var(--panel2); border:1px solid var(--border2); color:var(--accent); font-size:.78rem; font-weight:800; padding:6px 14px; border-radius:999px;}
+
+  nav{
+    display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap;
+    position:sticky; top:0; z-index:50;
+    padding:12px 0;
+    background:linear-gradient(180deg, var(--panel2), var(--bg));
+    border-bottom:1px solid var(--border);
+    box-shadow:0 6px 12px -10px rgba(0,0,0,0.8);
+  }
+  nav button{ /* plaquetas de latão penduradas na prateleira */
+    font-family:var(--f-head);
+    background:var(--panel); color:var(--muted); border:1px solid var(--border);
+    padding:9px 16px; border-radius:8px; cursor:pointer; font-size:.85rem; font-weight:700;
+    box-shadow:inset 0 1px 0 rgba(233,200,130,0.06), 0 1px 0 rgba(0,0,0,0.4);
+    transition:color .18s var(--ease-out), border-color .18s var(--ease-out), transform .12s var(--ease-out), background .18s var(--ease-out);
+  }
+  nav button:hover{color:var(--text); border-color:var(--accent2);}
+  nav button:active{transform:translateY(1px);}
+  nav button.active{ /* latão polido pela mão do dono */
+    background:linear-gradient(180deg, var(--accent2-hover), var(--accent2));
+    color:var(--on-accent2); border-color:var(--gold-deep);
+    box-shadow:inset 0 1px 0 rgba(255,235,180,0.4), 0 1px 0 rgba(0,0,0,0.4);
+  }
+
+  .card{
+    position:relative;
+    background:linear-gradient(180deg, var(--lvl3), var(--panel) 60px);
+    border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; margin-bottom:16px;
+    /* objeto físico sobre a mesa: aresta superior pega a luz da vela, base assenta em sombra curta */
+    box-shadow:
+      inset 0 1px 0 rgba(233,200,130,0.08),
+      0 2px 0 rgba(0,0,0,0.35),
+      0 10px 18px -14px rgba(0,0,0,0.8);
+  }
+  .card h2{
+    font-family:var(--f-head); margin:0 0 14px; font-size:1rem; color:var(--muted); font-weight:700; letter-spacing:.04em; text-transform:lowercase;
+    display:flex; align-items:center; gap:8px;
+  }
+  .card h2::before{ /* marca de forja — losango de bronze fosco, discreto */
+    content:''; width:8px; height:8px; flex-shrink:0;
+    background:var(--muted2);
+    transform:rotate(45deg); border-radius:2px;
+    opacity:.7;
+  }
+
+  .selo-gnomio{ /* selo de cera/latão — identidade do app, único ponto de dourado decorativo fora do saldo */
+    position:absolute; top:14px; right:16px; width:46px; height:46px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--accent2-hover), var(--gold-deep) 65%, #6b4a10 100%);
+    border:2px solid #6b4a10;
+    box-shadow:var(--elev-1), inset 0 1px 0 rgba(255,235,180,0.3);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--f-head); font-weight:800; font-size:1.05rem; color:var(--on-accent2);
+    transform:rotate(-8deg);
+  }
+
+  /* entrada de aba — conteúdo emerge da penumbra */
+  section{animation:tabIn .32s var(--ease-out);}
+  @keyframes tabIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .hero{ /* o livro-caixa: capa de couro, nível mais elevado do ambiente */
+    position:relative; overflow:hidden;
+    background:linear-gradient(180deg, var(--lvl3), #0a0908);
+    border:1px solid var(--border2);
+    border-radius:var(--radius);
+    padding:24px;
+    margin-bottom:14px;
+    transition:border-color .5s var(--ease-out), box-shadow .5s var(--ease-out);
+    box-shadow:
+      inset 0 1px 0 rgba(255,240,210,0.07),
+      var(--elev-2);
+  }
+  .hero-main::before, .hero-main::after{ /* cantoneiras de latão do livro-caixa */
+    content:''; position:absolute; width:20px; height:20px; pointer-events:none;
+    border-color:var(--accent2); border-style:solid; opacity:.6;
+  }
+  .hero-main::before{top:10px; left:10px; border-width:2px 0 0 2px; border-radius:3px 0 0 0;}
+  .hero-main::after{bottom:10px; right:10px; border-width:0 2px 2px 0; border-radius:0 0 3px 0;}
+  /* reação a ganho/perda: a capa do livro reage fisicamente — borda e sombra, nunca um brilho difuso atrás */
+  .hero.fx-gain{border-color:var(--accent2); box-shadow:inset 0 1px 0 rgba(255,240,210,0.07), var(--elev-2), inset 0 0 0 1px rgba(230,181,68,0.4);}
+  .hero.fx-loss{border-color:var(--bad); box-shadow:inset 0 1px 0 rgba(255,240,210,0.07), var(--elev-2), inset 0 0 0 1px rgba(232,103,74,0.4); animation:heroShake .5s var(--ease-out);}
+  @keyframes heroShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-5px);} 40%{transform:translateX(4px);}
+    60%{transform:translateX(-3px);} 80%{transform:translateX(2px);}
+  }
+  .hero .saldo-label{color:var(--muted); font-size:.82rem; font-weight:700; margin-bottom:4px; text-transform:lowercase; letter-spacing:.05em;}
+  .hero .saldo-valor{ /* número gravado em ouro batido — relevo, não glow */
+    font-family:var(--f-head); font-size:3rem; font-weight:800; line-height:1;
+    transition:color .4s var(--ease-out); font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 0 rgba(0,0,0,0.55), 0 -1px 0 rgba(255,235,180,0.12);
+  }
+  .hero .subline{color:var(--muted); font-size:.85rem; margin-top:8px;}
+  .hero .pillrow{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;}
+  .hero-main{display:flex; justify-content:space-between; align-items:center; gap:18px;}
+  .hero-mascote{display:flex; flex-direction:column; align-items:center; gap:8px; max-width:210px; flex-shrink:0;}
+  .hero-mascote .icon{width:84px; height:84px; animation:mascoteBob 3.4s ease-in-out infinite;}
+  @keyframes mascoteBob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-7px);} }
+  .hero-mascote .txt{font-size:.78rem; font-style:italic; color:var(--muted); text-align:center; line-height:1.45;}
+  .pill-good{background:rgba(164,217,119,0.14); color:var(--good); font-size:.78rem; font-weight:800; padding:5px 12px; border-radius:999px;}
+  .pill-bad{background:rgba(255,122,92,0.14); color:var(--bad); font-size:.78rem; font-weight:800; padding:5px 12px; border-radius:999px;}
+  .tip-box{
+    display:flex; gap:12px; align-items:flex-start;
+    background:linear-gradient(180deg, var(--lvl2), var(--panel2) 40px);
+    border:1px solid var(--border);
+    border-radius:12px; padding:14px 16px; margin-bottom:16px;
+    box-shadow:inset 0 1px 0 rgba(233,200,130,0.07);
+  }
+  .tip-box .icon{width:40px; height:40px; flex-shrink:0;}
+  .tip-box .txt{font-size:.85rem; font-style:italic; line-height:1.5;}
+
+  .grid3{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:0; margin-bottom:16px;
+    background:linear-gradient(180deg, var(--lvl3), var(--panel) 50px);
+    border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    box-shadow:inset 0 1px 0 rgba(233,200,130,0.07), 0 2px 0 rgba(0,0,0,0.35);
+  }
+  .stat{padding:16px 18px;}
+  .stat + .stat{border-left:1px solid var(--border);}
+  .stat .k{color:var(--muted); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+  .stat .v{font-family:var(--f-head); font-size:1.4rem; font-weight:800; margin-top:4px; text-shadow:0 1px 0 rgba(0,0,0,0.5);}
+  .v.good{color:var(--good);} .v.bad{color:var(--bad);}
+
+  .chat-box{ /* balcão de atendimento do goblin — fenda entalhada na madeira */
+    display:flex; gap:8px; align-items:center;
+    background:#080706;
+    border:1px solid var(--border); border-radius:12px; padding:6px 6px 6px 18px; margin-bottom:10px;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(233,200,130,0.05);
+  }
+  .chat-box input{
+    flex:1; background:transparent; border:none; color:var(--text);
+    padding:10px 4px; font-size:.92rem; font-family:var(--f-body);
+  }
+  .chat-box input:focus{outline:none;}
+  .chat-box input::placeholder{color:var(--muted2);}
+  .chat-box button{ /* sinete de latão */
+    background:linear-gradient(180deg, var(--accent2-hover), var(--accent2));
+    color:var(--on-accent2); border:1px solid var(--gold-deep); width:42px; height:42px; border-radius:10px;
+    font-weight:800; cursor:pointer; font-size:1rem; flex-shrink:0;
+    box-shadow:inset 0 1px 0 rgba(255,235,180,0.4), 0 1px 0 rgba(0,0,0,0.4);
+  }
+  .chat-box button:hover{background:linear-gradient(180deg, #d8b05c, var(--accent2-hover));}
+  .chat-hint{color:var(--muted); font-size:.78rem; margin-bottom:6px;}
+  .chat-hint b{color:var(--accent);}
+
+  .feed{display:flex; flex-direction:column; gap:10px; max-height:240px; overflow-y:auto; margin-bottom:12px;}
+  .bubble{padding:10px 16px; font-size:.9rem; max-width:78%;}
+  .bubble.me{align-self:flex-end; background:var(--accent2); color:var(--on-accent2); border-radius:18px 18px 4px 18px; font-weight:600;}
+  .bubble.bot{align-self:flex-start; display:flex; gap:10px; align-items:flex-end; max-width:88%;}
+  .bubble.bot .icon{width:30px; height:30px; flex-shrink:0;}
+  .bubble.bot .txt{background:var(--panel2); border-radius:18px 18px 18px 4px; padding:10px 16px; font-style:italic; line-height:1.45;}
+  .btn-undo{
+    display:block; margin-top:6px; background:none; border:none; color:var(--accent);
+    font-family:var(--f-body); font-style:normal; font-weight:800; font-size:.76rem;
+    cursor:pointer; padding:0; text-decoration:underline;
+  }
+
+  form.manual{display:grid; grid-template-columns:1fr 1fr 1fr 1fr auto; gap:10px; align-items:end;}
+  form.manual .field{display:flex; flex-direction:column; gap:4px;}
+  form.manual label{font-size:.74rem; color:var(--muted); font-weight:700;}
+  form.manual input, form.manual select{ /* fendas entalhadas na madeira */
+    background:#080706; border:1px solid var(--border); color:var(--text);
+    padding:10px 12px; border-radius:8px; font-size:.9rem; font-family:var(--f-body);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.5);
+  }
+  form.manual button{ /* botão de latão forjado */
+    font-family:var(--f-head);
+    background:linear-gradient(180deg, var(--accent2-hover), var(--accent2));
+    color:var(--on-accent2); border:1px solid var(--gold-deep); padding:11px 18px; border-radius:8px;
+    font-weight:800; cursor:pointer; height:41px;
+    box-shadow:inset 0 1px 0 rgba(255,235,180,0.4), 0 2px 0 rgba(0,0,0,0.4);
+  }
+  form.manual button:active{box-shadow:inset 0 2px 4px rgba(0,0,0,0.4); transform:translateY(1px);}
+  .tipo-toggle{display:flex; gap:6px;}
+  .tipo-toggle button{
+    flex:1; background:#080706; border:1px solid var(--border); color:var(--muted);
+    padding:9px; border-radius:8px; cursor:pointer; font-size:.83rem; font-weight:700; font-family:var(--f-body);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .tipo-toggle button.on.gasto{background:var(--bad); color:#2b0d06; border-color:var(--bad); box-shadow:inset 0 1px 0 rgba(255,220,200,0.35);}
+  .tipo-toggle button.on.receita{background:var(--good); color:#152b09; border-color:var(--good); box-shadow:inset 0 1px 0 rgba(230,255,210,0.35);}
+
+  table{width:100%; border-collapse:collapse; font-size:.86rem;}
+  th{text-align:left; color:var(--muted); font-weight:700; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; padding:8px 10px; border-bottom:1px solid var(--border2);}
+  td{padding:9px 10px; border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  .tag{display:inline-block; padding:3px 10px; border-radius:999px; font-size:.74rem; font-weight:700; background:#080706; border:1px solid var(--border2); box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);}
+  .valor.gasto{color:var(--bad); font-weight:800;}
+  .valor.receita{color:var(--good); font-weight:800;}
+  .del{cursor:pointer; color:var(--muted); border:none; background:none; font-size:.95rem;}
+  .edit{cursor:pointer; color:var(--muted); border:none; background:none; font-size:.9rem; margin-right:6px;}
+  .del:hover, .edit:hover{color:var(--text);}
+  #tabelaRecentes input, #tabelaRecentes select, #tabelaHistorico input, #tabelaHistorico select{
+    background:#080706; border:1px solid var(--border); color:var(--text);
+    padding:5px 7px; border-radius:6px; font-size:.8rem; font-family:var(--f-body); width:100%;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,0.45);
+  }
+  .del:hover{color:var(--bad);}
+
+  .empty{color:var(--muted); text-align:center; padding:24px; font-size:.9rem;}
+
+  .fixa-item{ /* fichas de cobrança na mesa */
+    background:linear-gradient(180deg, var(--lvl3), var(--panel));
+    border:1px solid var(--border);
+    border-radius:10px; padding:14px 16px; margin-bottom:10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    box-shadow:inset 0 1px 0 rgba(233,200,130,0.06), 0 1px 0 rgba(0,0,0,0.35);
+  }
+  .fixa-item .nome{font-weight:800; font-size:.92rem;}
+  .fixa-item .meta{color:var(--muted); font-size:.76rem; margin-top:2px;}
+  .fixa-item .right{display:flex; align-items:center; gap:10px;}
+  .fixa-item .valor-fixa{font-family:var(--f-head); font-weight:800; font-size:.95rem;}
+  .status-pago{background:rgba(143,191,106,0.14); color:var(--good); font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px;}
+  .status-agendado{background:rgba(217,169,68,0.14); color:var(--accent); font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px;}
+
+  .conta-item{ /* cofres na estante */
+    background:linear-gradient(180deg, var(--lvl3), var(--panel));
+    border-radius:10px; padding:16px; margin-bottom:10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid var(--border);
+    box-shadow:inset 0 1px 0 rgba(233,200,130,0.06), 0 1px 0 rgba(0,0,0,0.35);
+  }
+  .conta-item.rende{border-color:rgba(143,191,106,0.35);}
+  .conta-item.negativa{border-color:rgba(217,106,82,0.4);}
+  .conta-item .left{display:flex; align-items:center; gap:10px;}
+  .conta-item .badge{width:38px; height:38px; border-radius:9px; background:rgba(255,240,210,0.05); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .conta-item .nome{font-weight:800; font-size:.92rem;}
+  .conta-item .meta{color:var(--muted); font-size:.76rem; margin-top:2px;}
+  .conta-item .valores{text-align:right;}
+  .conta-item .saldo{font-family:var(--f-head); font-weight:800; font-size:1.05rem; text-shadow:0 1px 0 rgba(0,0,0,0.5);}
+  .conta-item .rend{font-size:.74rem; font-weight:800; color:var(--good); margin-top:2px;}
+  .conta-item .rend.neg{color:var(--bad);}
+
+  .bar-row{display:grid; grid-template-columns:110px 1fr 70px; align-items:center; gap:10px; margin-bottom:10px; font-size:.85rem;}
+  .bar-track{height:10px; background:#060504; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);} /* canaleta gravada */
+  .bar-fill{height:100%; background:var(--muted2); border-radius:999px;} /* neutro — dourado só quando estoura meta (definido no JS) */
+  .proj-bar{height:14px; background:#060504; border-radius:999px; overflow:hidden; margin:6px 0; box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);}
+  .proj-bar-fill{height:100%; border-radius:999px;}
+
+  .conquistas-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:12px;}
+  .conquista{
+    background:linear-gradient(180deg, var(--lvl3), var(--panel) 40px); border:1px solid var(--border); border-radius:16px; padding:16px 14px;
+    display:flex; flex-direction:column; gap:8px; opacity:.85;
+  }
+  .conquista .icon{width:40px; height:40px; filter:grayscale(1); opacity:.45;}
+  .conquista.unlocked{background:var(--panel2); border-color:rgba(242,181,68,0.35); opacity:1;}
+  .conquista.unlocked .icon{filter:none; opacity:1;}
+  .conquista .toprow{display:flex; justify-content:space-between; align-items:flex-start;}
+  .conquista .tagpill{font-size:.68rem; font-weight:800; padding:3px 9px; border-radius:999px; background:var(--border); color:var(--muted2);}
+  .conquista.unlocked .tagpill.goblin{background:rgba(127,201,107,0.16); color:var(--goblin);}
+  .conquista.unlocked .tagpill.gnomo{background:rgba(159,134,255,0.18); color:#b3a8ff;}
+  .conquista .nome{font-weight:800; font-size:.87rem; line-height:1.25; color:var(--muted);}
+  .conquista.unlocked .nome{color:var(--text);}
+  .conquista .desc{font-size:.72rem; color:var(--muted2); line-height:1.4;}
+  .conquista.unlocked .desc{color:var(--muted);}
+
+  #toastArea{position:fixed; top:20px; right:20px; z-index:500; display:flex; flex-direction:column; gap:10px;}
+  .toast{
+    background:var(--panel2); border:1px solid var(--accent); border-radius:14px; padding:12px 16px;
+    display:flex; align-items:center; gap:12px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+    animation:toastIn .35s ease;
+    max-width:280px;
+  }
+  .toast .icon{width:36px; height:36px; flex-shrink:0;}
+  .toast .t{font-size:.74rem; color:var(--accent); font-weight:800; text-transform:uppercase;}
+  .toast .n{font-size:.86rem; font-weight:800; font-family:var(--f-head);}
+  @keyframes toastIn{ from{transform:translateX(40px); opacity:0;} to{transform:translateX(0); opacity:1;} }
+
+  .ia-row{display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--muted); font-size:.78rem;}
+  .ia-row button, .ia-actions button{background:var(--panel2); border:1px solid var(--border2); color:var(--accent); padding:5px 12px; border-radius:999px; cursor:pointer; font-size:.76rem; font-weight:800; font-family:var(--f-body);}
+  .ia-row button:hover, .ia-actions button:hover{border-color:var(--accent2); color:var(--text);}
+  #iaConfigBox{background:var(--panel2); border:1px solid var(--border2); border-radius:12px; padding:12px; margin-top:8px; display:flex; flex-direction:column; gap:8px;}
+  #iaConfigBox input{background:var(--panel); border:1px solid var(--border2); color:var(--text); padding:9px 12px; border-radius:8px; font-size:.85rem; font-family:var(--f-body);}
+  .ia-actions{display:flex; gap:8px;}
+  .qr-row{display:flex; gap:8px; flex-wrap:wrap; margin:2px 0 4px 40px;}
+  .qr-row button{background:var(--panel); border:1px solid var(--accent2); color:var(--text); padding:7px 14px; border-radius:999px; cursor:pointer; font-size:.8rem; font-weight:700; font-family:var(--f-body);}
+  .qr-row button:hover{background:var(--accent2); color:var(--on-accent2);}
+  .btn-lancar{background:var(--accent); color:#1a1a1a; border:none; border-radius:8px; padding:6px 12px; font-weight:800; cursor:pointer; font-size:.72rem; font-family:var(--f-head);}
+  .backup-row{display:flex; gap:8px; justify-content:center; margin-top:12px;}
+  .backup-row button{background:var(--panel); border:1px solid var(--border); color:var(--muted); padding:7px 14px; border-radius:999px; cursor:pointer; font-size:.78rem; font-weight:700; font-family:var(--f-body);}
+  .backup-row button:hover{color:var(--text); border-color:var(--accent2);}
+
+  footer{text-align:center; color:var(--muted); font-size:.75rem; margin-top:30px;}
+
+  /* ===== FX DE DINHEIRO ===== */
+  #fxLayer{position:fixed; inset:0; pointer-events:none; z-index:900; overflow:hidden;}
+  .coin{
+    position:absolute; width:22px; height:22px; border-radius:50%;
+    background:radial-gradient(circle at 34% 30%, #f5dc9a, var(--accent) 52%, var(--gold-deep) 100%);
+    border:2px solid var(--gold-deep);
+    box-shadow:0 3px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,200,0.5);
+    will-change:transform, opacity;
+  }
+  .coin::after{content:'ᚷ'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--gold-deep); font-weight:800;}
+  .coin.rise{animation:coinRise 1s var(--ease-out) forwards;}
+  .coin.fall{animation:coinFall 1s cubic-bezier(0.5, 0, 0.75, 0) forwards;}
+  @keyframes coinRise{
+    0%{transform:translateY(0) scale(.5) rotate(0); opacity:0;}
+    18%{opacity:1;}
+    100%{transform:translateY(-130px) scale(1) rotate(340deg); opacity:0;}
+  }
+  @keyframes coinFall{
+    0%{transform:translateY(0) scale(1) rotate(0); opacity:1;}
+    100%{transform:translateY(150px) scale(.45) rotate(-300deg); opacity:0;}
+  }
+  .saldo-valor.counting-up{color:var(--good);}
+  .saldo-valor.counting-down{color:var(--bad);}
+
+  /* ===== O ESPIÃO ===== */
+  #goblinSpy{
+    position:fixed; right:-70px; bottom:90px; width:64px; height:64px; z-index:901;
+    transition:transform .55s var(--ease-out);
+    pointer-events:none;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+  }
+  #goblinSpy.peek{transform:translateX(-78px) rotate(-8deg);}
+  /* piscada de goblin no gnomo do header */
+  header .titlewrap .icon{position:relative;}
+  header .titlewrap .icon .goblin-eyes{
+    position:absolute; inset:0; opacity:0; transition:opacity .18s;
+  }
+  header .titlewrap .icon.blink .goblin-eyes{opacity:1;}
+
+  /* ===== micro-interações gerais (transform/opacity apenas) ===== */
+  button{transition:transform .12s var(--ease-out), background .18s var(--ease-out), border-color .18s var(--ease-out), color .18s var(--ease-out);}
+  button:active{transform:scale(0.95);}
+  .bubble{animation:bubbleIn .28s var(--ease-out);}
+  @keyframes bubbleIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .fixa-item, .conta-item{transition:transform .18s var(--ease-out), border-color .3s var(--ease-out);}
+  .fixa-item:hover, .conta-item:hover{transform:translateY(-2px);}
+  .bar-fill, .proj-bar-fill{transition:width .7s var(--ease-out);}
+  .stat .v{transition:transform .2s var(--ease-out);}
+  .stat .v.bump{animation:vBump .4s var(--ease-out);}
+  @keyframes vBump{ 0%{transform:scale(1);} 40%{transform:scale(1.12);} 100%{transform:scale(1);} }
+  .toast{
+    background:linear-gradient(180deg, var(--lvl2), var(--panel2));
+  }
+  #tourOverlay{background:rgba(9,7,4,0.9) !important;}
+  .conquista.unlocked{transition:transform .2s var(--ease-out);}
+  .conquista.unlocked:hover{transform:translateY(-3px);}
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+  }
+
+  @media (max-width:640px){
+    .wrap{padding:20px 14px 110px;} /* espaço pra nav inferior */
+    form.manual{grid-template-columns:1fr 1fr;}
+    form.manual button[type="submit"]{grid-column:1/-1;}
+    .hero .saldo-valor{font-size:2.1rem; text-shadow:0 0 18px rgba(242,181,68,0.24);}
+    .hero-main{flex-direction:column-reverse; align-items:flex-start; gap:12px;}
+    .hero-mascote{flex-direction:row; max-width:none; align-items:center; text-align:left;}
+    .hero-mascote .icon{width:56px; height:56px;}
+    .hero-mascote .txt{text-align:left;}
+    .grid3{grid-template-columns:1fr;}
+    .stat + .stat{border-left:none; border-top:1px solid var(--border);}
+    .stat{padding:12px 16px;}
+    /* nav no alcance do polegar */
+    nav{
+      position:fixed; top:auto; bottom:0; left:0; right:0; z-index:60;
+      margin:0; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+      overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch;
+      border-top:1px solid var(--border);
+      background:linear-gradient(180deg, var(--panel2), var(--bg));
+      box-shadow:0 -6px 12px -10px rgba(0,0,0,0.8);
+      scrollbar-width:none;
+    }
+    nav::-webkit-scrollbar{display:none;}
+    nav button{flex-shrink:0;}
+    .bar-row{grid-template-columns:84px 1fr 66px; font-size:.8rem;}
+    .bubble{max-width:90%;}
+    .feed{max-height:300px;}
+    #toastArea{left:20px;}
+    #goblinSpy{bottom:150px;} /* acima da nav inferior */
+  }
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="face-wrap" id="splashFace"></div>
+  <h1>Gnômio</h1>
+  <p>seu cofre pessoal tem dono agora</p>
+  <button id="splashEnter">Entrar</button>
+</div>
+
+<div id="toastArea"></div>
+<div id="fxLayer"></div>
+<div id="goblinSpy"></div>
+
+<div id="tourOverlay" style="display:none; position:fixed; inset:0; background:rgba(15,18,32,0.85); z-index:998; align-items:center; justify-content:center; padding:20px;">
+  <div class="card" style="max-width:420px; width:100%;">
+    <div id="tourIcon" style="width:50px; height:50px; margin-bottom:12px;"></div>
+    <h2 id="tourTitulo" style="margin-bottom:8px; font-size:1.2rem; color:var(--text);"></h2>
+    <p id="tourTexto" style="color:var(--muted); font-size:.9rem; line-height:1.5; margin:0;"></p>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px;">
+      <button id="tourPular" type="button" style="background:none; color:var(--muted); border:1px solid var(--border2); border-radius:999px; padding:9px 16px; cursor:pointer; font-family:var(--f-head); font-weight:700; font-size:.85rem;">pular</button>
+      <button id="tourProximo" type="button" style="background:var(--accent2); color:var(--on-accent2); border:none; border-radius:999px; padding:9px 20px; cursor:pointer; font-family:var(--f-head); font-weight:800; font-size:.85rem;"></button>
+    </div>
+  </div>
+</div>
+
+<div id="iosInstallOverlay" style="display:none; position:fixed; inset:0; background:rgba(15,18,32,0.85); z-index:998; align-items:center; justify-content:center; padding:20px;">
+  <div class="card" style="max-width:380px; width:100%;">
+    <h2 style="margin-bottom:10px; font-size:1.1rem; color:var(--text);">instalar no iPhone</h2>
+    <p style="color:var(--muted); font-size:.86rem; line-height:1.7; margin:0;">
+      a Apple não deixa nenhum app instalar sozinho no Safari — é sempre manual, três toques:<br><br>
+      1. toca no ícone de <b style="color:var(--text);">compartilhar</b> (o quadrado com a seta pra cima), na barra do navegador<br>
+      2. desce e toca em <b style="color:var(--text);">"Adicionar à Tela de Início"</b><br>
+      3. toca em <b style="color:var(--text);">"Adicionar"</b>
+      <br><br>o ícone do Gnômio aparece na tela como qualquer outro app, sem barra do navegador.
+    </p>
+    <button id="iosInstallFechar" type="button" style="margin-top:16px; width:100%; background:var(--accent2); color:var(--on-accent2); border:none; border-radius:999px; padding:11px; cursor:pointer; font-family:var(--f-head); font-weight:800; font-size:.9rem;">entendi</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="titlewrap">
+      <div class="icon" id="headerIcon"></div>
+      <div>
+        <h1>Gnômio</h1>
+        <div class="sub" id="saudacao">que a noite vos encontre em paz, mortal</div>
+      </div>
+    </div>
+    <div class="month-pill" id="mesPill">julho</div>
+  </header>
+
+  <nav>
+    <button data-tab="dashboard" class="active">painel</button>
+    <button data-tab="lancar">lançar</button>
+    <button data-tab="contas">cofres</button>
+    <button data-tab="fixas">contas fixas</button>
+    <button data-tab="historico">histórico</button>
+    <button data-tab="conquistas">troféus</button>
+    <button data-tab="projecao">projeção</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard">
+    <div class="card" id="backupBanner" style="display:none; background:rgba(242,181,68,0.1); border-color:var(--accent);">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="font-size:.85rem;" id="backupBannerTxt"></div>
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          <button id="backupBannerExportar" type="button">exportar agora</button>
+          <button id="backupBannerDepois" type="button" style="background:none; color:var(--muted); border:1px solid var(--border2);">lembrar depois</button>
+        </div>
+      </div>
+    </div>
+    <div class="hero">
+      <div class="selo-gnomio">G</div>
+      <div class="hero-main">
+        <div>
+          <div class="saldo-label">saldo total</div>
+          <div class="saldo-valor" id="saldoAtual">R$ 0,00</div>
+          <div class="subline" id="subSaldo">o que sobrou depois do estrago</div>
+          <div class="pillrow">
+            <div class="pill-good" id="pillEntradas">entrou R$ 0</div>
+            <div class="pill-bad" id="pillSaidas">saiu R$ 0</div>
+          </div>
+        </div>
+        <div class="hero-mascote">
+          <div class="icon" id="fraseIcon"></div>
+          <div class="txt" id="fraseMascote">"ainda não sei como você anda de grana, me conta aí"</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="stat">
+        <div class="k">Entradas este mês</div>
+        <div class="v good" id="statEntradas">R$ 0,00</div>
+      </div>
+      <div class="stat">
+        <div class="k">Saídas este mês</div>
+        <div class="v bad" id="statSaidas">R$ 0,00</div>
+      </div>
+      <div class="stat">
+        <div class="k">Sobra do mês</div>
+        <div class="v" id="statSobra">R$ 0,00</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>saldo nos últimos meses</h2>
+      <div id="evolucaoSaldo"></div>
+    </div>
+
+    <div class="card">
+      <h2>pra onde foi o dinheiro</h2>
+      <div id="categoriasBars"></div>
+      <div class="empty" id="categoriasEmpty" style="display:none;">Ainda não tem gasto categorizado esse mês.</div>
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+        <div class="chat-hint" style="margin-bottom:8px;">define um teto mensal por categoria pra receber aviso visual quando estourar.</div>
+        <form id="formMeta" style="display:flex; gap:8px; flex-wrap:wrap; align-items:end;">
+          <div class="field" style="flex:1; min-width:120px;">
+            <label>Categoria</label>
+            <input type="text" id="metaCategoria" list="categoriasList" placeholder="lazer, ifood...">
+          </div>
+          <div class="field" style="width:110px;">
+            <label>Teto (R$)</label>
+            <input type="number" step="0.01" id="metaValor" placeholder="300">
+          </div>
+          <button type="submit">salvar meta</button>
+        </form>
+        <div id="listaMetas" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>últimos lançamentos</h2>
+      <table id="tabelaRecentes">
+        <thead><tr><th>Data</th><th>Cofre</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="recentesEmpty" style="display:none;">Nada lançado ainda. Vai lá na aba "lançar" 👉</div>
+    </div>
+  </section>
+
+  <!-- LANÇAR -->
+  <section id="tab-lancar" style="display:none;">
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+        <h2 style="margin-bottom:0;">fala com o Gnômio</h2>
+        <div class="ia-row" style="margin:0;">
+          <span id="iaStatusTxt">cérebro: regras locais</span>
+          <button id="iaConfigBtn" type="button">conectar IA</button>
+        </div>
+      </div>
+      <div class="feed" id="chatFeed"></div>
+      <div class="chat-box">
+        <input id="chatInput" type="text" placeholder="conta pro goblin o que você fez…">
+        <button id="chatSend">➤</button>
+      </div>
+      <div class="chat-hint">Entendo frases como <b>"gastei 30 no uber"</b>, <b>"paguei 120 de conta de luz ontem"</b>, <b>"recebi 500 de freela"</b> e <b>"tenho 6.040,78 guardado no mercado pago"</b>.</div>
+      <div id="iaConfigBox" style="display:none;">
+        <input type="password" id="iaKey" placeholder="cole sua chave da API do Gemini (AIza...)">
+        <div class="ia-actions">
+          <button id="iaSalvar" type="button">salvar</button>
+          <button id="iaRemover" type="button">remover</button>
+        </div>
+        <div class="chat-hint" style="margin-bottom:0;">crie a chave <b>de graça</b> em <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> — cai direto na tela da chave, sem precisar caçar menu. ela fica salva só neste navegador (não vai no backup). free tier do Gemini: sem cartão, sem custo pra uso pessoal.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>lançamento manual</h2>
+      <form class="manual" id="formManual">
+        <div class="field">
+          <label>Tipo</label>
+          <div class="tipo-toggle">
+            <button type="button" class="on gasto" data-tipo="gasto">Gasto</button>
+            <button type="button" data-tipo="receita">Receita</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Cofre</label>
+          <select id="mConta"></select>
+        </div>
+        <div class="field">
+          <label>Valor (R$)</label>
+          <input type="number" step="0.01" id="mValor" placeholder="0,00" required>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <input type="text" id="mCategoria" placeholder="mercado, uber..." list="categoriasList" required>
+        </div>
+        <datalist id="categoriasList"></datalist>
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="mData" required>
+        </div>
+        <button type="submit" style="grid-column:1/-1;">Adicionar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- CONTAS -->
+  <section id="tab-contas" style="display:none;">
+    <div class="card">
+      <h2>novo cofre</h2>
+      <form class="manual" id="formConta">
+        <div class="field">
+          <label>Banco (preenche sozinho)</label>
+          <select id="cBanco">
+            <option value="">— manual —</option>
+            <option value="mercadopago">Mercado Pago</option>
+            <option value="nubank">Nubank (caixinha)</option>
+            <option value="picpay">PicPay</option>
+            <option value="inter">Inter</option>
+            <option value="cdb">CDB 100% CDI</option>
+            <option value="poupanca">Poupança</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nome</label>
+          <input type="text" id="cNome" placeholder="cofrinho, banco X, CDB..." required>
+        </div>
+        <div class="field">
+          <label>Saldo inicial (R$)</label>
+          <input type="number" step="0.01" id="cSaldo" placeholder="0,00" required>
+        </div>
+        <div class="field">
+          <label>Rendimento</label>
+          <input type="number" step="0.01" id="cTaxa" placeholder="0" value="0">
+        </div>
+        <div class="field">
+          <label>Período da taxa</label>
+          <select id="cPeriodo">
+            <option value="cdi">% do CDI</option>
+            <option value="mes">% ao mês</option>
+            <option value="ano">% ao ano</option>
+          </select>
+        </div>
+        <button type="submit">Adicionar</button>
+      </form>
+      <div class="chat-hint" id="cdiInfo" style="margin-top:10px; margin-bottom:0;"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 style="margin:0;">seus cofres</h2>
+        <div style="color:var(--muted); font-size:.85rem;">total <span style="color:var(--accent); font-weight:800;" id="totalContasHeader">R$ 0,00</span></div>
+      </div>
+      <div id="listaContas"></div>
+      <div class="empty" id="contasEmpty" style="display:none;">Nenhum cofre cadastrado.</div>
+    </div>
+  </section>
+
+  <!-- CONTAS FIXAS -->
+  <section id="tab-fixas" style="display:none;">
+    <div class="card">
+      <h2>nova conta fixa (recorrente todo mês)</h2>
+      <div class="chat-hint" style="margin-top:-6px;">só mostra cofres do dia a dia aqui — caixinhas/poupança/investimento ficam de fora, pra nunca puxar uma conta fixa de onde você guarda dinheiro. deixa "a partir de" em branco pra já valer esse mês, ou escolhe um mês futuro pra só começar a lançar a partir dele.</div>
+      <form class="manual" id="formFixa">
+        <div class="field">
+          <div class="tipo-toggle">
+            <button type="button" class="on gasto" data-tipo="gasto">Gasto</button>
+            <button type="button" data-tipo="receita">Receita</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Nome</label>
+          <input type="text" id="fNome" placeholder="aluguel, netflix, salário..." required>
+        </div>
+        <div class="field">
+          <label>Cofre</label>
+          <select id="fConta"></select>
+        </div>
+        <div class="field">
+          <label>Valor (R$)</label>
+          <input type="number" step="0.01" id="fValor" required>
+        </div>
+        <div class="field">
+          <label>Dia do mês</label>
+          <input type="number" min="1" max="31" id="fDia" placeholder="ex: 10" required>
+        </div>
+        <div class="field">
+          <label>A partir de (opcional)</label>
+          <input type="month" id="fInicio">
+        </div>
+        <div class="field" style="flex-direction:row; align-items:center; gap:6px;">
+          <input type="checkbox" id="fVariavel" style="width:auto;">
+          <label for="fVariavel" style="margin:0;">valor varia todo mês (nunca lança sozinho)</label>
+        </div>
+        <button type="submit">Adicionar</button>
+      </form>
+    </div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 style="margin:0;">contas fixas</h2>
+        <div style="color:var(--muted); font-size:.85rem;"><span style="color:var(--accent); font-weight:800;" id="totalFixasHeader">R$ 0,00</span>/mês em promessas recorrentes</div>
+      </div>
+      <div id="listaFixas"></div>
+      <div class="empty" id="fixasEmpty" style="display:none;">Nenhuma conta fixa cadastrada ainda.</div>
+    </div>
+  </section>
+
+  <!-- HISTÓRICO -->
+  <section id="tab-historico" style="display:none;">
+    <div class="card">
+      <h2>histórico completo</h2>
+      <form class="manual" id="formFiltroHistorico" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Cofre</label>
+          <select id="filtroCofre"><option value="">todos</option></select>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select id="filtroCategoria"><option value="">todas</option></select>
+        </div>
+        <div class="field">
+          <label>Mês</label>
+          <input type="month" id="filtroMes">
+        </div>
+        <button type="button" id="filtroLimpar">limpar filtros</button>
+      </form>
+      <table id="tabelaHistorico">
+        <thead><tr><th>Data</th><th>Cofre</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="historicoEmpty" style="display:none;">Nada encontrado com esses filtros.</div>
+    </div>
+  </section>
+
+  <!-- CONQUISTAS -->
+  <section id="tab-conquistas" style="display:none;">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 style="margin:0;">sala de troféus</h2>
+        <div style="color:var(--muted); font-size:.85rem;"><span style="color:var(--accent); font-weight:800;" id="conquistasContagem">0</span>/<span id="conquistasTotal">0</span> desbloqueadas</div>
+      </div>
+      <div class="conquistas-grid" id="conquistasGrid"></div>
+    </div>
+  </section>
+
+  <!-- PROJEÇÃO -->
+  <section id="tab-projecao" style="display:none;">
+    <div class="card">
+      <h2 id="projTituloMes">o filme deste mês</h2>
+      <div id="projAtual"></div>
+    </div>
+    <div class="card">
+      <h2 id="projTituloProximo">o filme do mês que vem</h2>
+      <div id="projProximo"></div>
+    </div>
+  </section>
+
+  <footer>
+  Gnômio — 100% local, seus dados ficam só neste navegador.
+  <div class="backup-row" id="installRow" style="display:none; margin-bottom:8px;">
+    <button id="btnInstall" style="display:none;">📲 instalar o Gnômio</button>
+    <button id="btnInstallIos" style="display:none;">📲 instalar no iPhone</button>
+  </div>
+  <div class="backup-row">
+    <button id="btnExport">exportar backup</button>
+    <button id="btnImport">importar backup</button>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+  </div>
+</footer>
+</div>
+
+<script>
+// ---------- ícones (mesmo estilo aprovado no design) ----------
+const ICON_GOBLIN = `<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+<path d="M13 48 L31 41 L31 56 Z" fill="#6ec94d" stroke="#20160a" stroke-width="4"/>
+<path d="M83 48 L65 41 L65 56 Z" fill="#6ec94d" stroke="#20160a" stroke-width="4"/>
+<circle cx="48" cy="54" r="23" fill="#6ec94d" stroke="#20160a" stroke-width="4"/>
+<path d="M25 44 Q34 12 62 14 Q60 20 56 22 Q74 24 71 44 Z" fill="#ef6b4c" stroke="#20160a" stroke-width="4"/>
+<path d="M34 54 q5 5 10 0" stroke="#20160a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M52 54 q5 5 10 0" stroke="#20160a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M40 68 q8 4 15 -2" stroke="#20160a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+</svg>`;
+
+const ICON_GNOMO = `<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+<path d="M24 52 Q24 84 48 87 Q72 84 72 52 Z" fill="#f7efd8" stroke="#20160a" stroke-width="4"/>
+<circle cx="48" cy="52" r="15" fill="#f2b98c" stroke="#20160a" stroke-width="4"/>
+<path d="M48 6 L73 44 L23 44 Z" fill="#9c7dff" stroke="#20160a" stroke-width="4"/>
+<path d="M41 52 q3 3 6 0" stroke="#20160a" stroke-width="3" fill="none" stroke-linecap="round"/>
+<circle cx="48" cy="58" r="4" fill="#e8a06f" stroke="#20160a" stroke-width="2.5"/>
+</svg>`;
+
+const ICON_BANK = `<svg viewBox="0 0 24 24" width="100%" height="100%"><rect x="3" y="6" width="18" height="13" rx="3" fill="none" stroke="#e0a02f" stroke-width="2"/><path d="M3 10 h18" stroke="#e0a02f" stroke-width="2"/></svg>`;
+
+document.getElementById('splashFace').innerHTML = Math.random()>0.5 ? ICON_GNOMO : ICON_GOBLIN;
+document.getElementById('headerIcon').innerHTML = ICON_GNOMO + `<div class="goblin-eyes">${ICON_GOBLIN}</div>`;
+document.getElementById('goblinSpy').innerHTML = ICON_GOBLIN;
+
+// ===== a língua do gnomo =====
+// o gnomo NÃO fala português. fala gnômico. o goblin traduz de má vontade.
+const GNOMICO_SIL = ['zar','ûn','keth','mor','vel','dûm','gna','rik','tho','bal','ur','ski','fen','gol','drá','nim','vor','ash','tek','lum'];
+function gnomico(seed){
+  // gera frase gnômica pseudo-aleatória mas estável pro mesmo texto (mesma "fala" = mesma frase)
+  let h = 0;
+  for(let i=0;i<seed.length;i++){ h = (h*31 + seed.charCodeAt(i)) >>> 0; }
+  const rnd = ()=>{ h = (h*1103515245 + 12345) >>> 0; return h/4294967296; };
+  const nPalavras = 3 + Math.floor(rnd()*3);
+  const palavras = [];
+  for(let p=0;p<nPalavras;p++){
+    const nSil = 1 + Math.floor(rnd()*3);
+    let w = '';
+    for(let s=0;s<nSil;s++) w += GNOMICO_SIL[Math.floor(rnd()*GNOMICO_SIL.length)];
+    palavras.push(w);
+  }
+  let frase = palavras.join(' ');
+  frase = frase.charAt(0).toUpperCase()+frase.slice(1);
+  return frase + (rnd()>0.5 ? '.' : '!');
+}
+function falaGnomo(traducao, undoIds){
+  const g = gnomico(traducao);
+  return addChatBubble(
+    `<span style="font-weight:800; letter-spacing:.02em;">${esc(g)}</span><span style="display:block; margin-top:5px; font-size:.78rem; color:var(--muted); font-style:normal;">tradução do goblin, de má vontade: ${traducao}</span>`,
+    'bot', ICON_GNOMO, undoIds
+  );
+}
+
+// ===== motor de FX de dinheiro =====
+let saldoExibido = null; // último saldo mostrado, pra animar a transição
+let saldoTweenRAF = null;
+function animarSaldo(el, de, para){
+  if(saldoTweenRAF) cancelAnimationFrame(saldoTweenRAF);
+  const dur = 800, t0 = performance.now();
+  const subindo = para > de;
+  el.classList.remove('counting-up','counting-down');
+  if(Math.abs(para-de) > 0.005) el.classList.add(subindo ? 'counting-up' : 'counting-down');
+  function frame(t){
+    const p = Math.min(1, (t-t0)/dur);
+    const eased = 1 - Math.pow(1-p, 4); // ease-out-quart
+    const atual = de + (para-de)*eased;
+    el.textContent = brl(atual);
+    if(p < 1){ saldoTweenRAF = requestAnimationFrame(frame); }
+    else {
+      el.textContent = brl(para);
+      el.classList.remove('counting-up','counting-down');
+      el.style.color = para>=0 ? 'var(--accent)' : 'var(--bad)';
+      saldoTweenRAF = null;
+    }
+  }
+  saldoTweenRAF = requestAnimationFrame(frame);
+}
+function spawnCoins(tipo, qtd){
+  const layer = document.getElementById('fxLayer');
+  const hero = document.querySelector('.hero');
+  const rect = hero ? hero.getBoundingClientRect() : {left:innerWidth/2-100, width:200, top:innerHeight/2, height:60};
+  const n = Math.min(14, Math.max(4, qtd));
+  for(let i=0;i<n;i++){
+    const c = document.createElement('div');
+    c.className = 'coin ' + (tipo==='receita' ? 'rise' : 'fall');
+    const x = rect.left + rect.width*(0.15 + Math.random()*0.7);
+    const y = rect.top + rect.height*(tipo==='receita' ? 0.9 : 0.3);
+    c.style.left = x+'px'; c.style.top = y+'px';
+    c.style.animationDelay = (Math.random()*0.35)+'s';
+    layer.appendChild(c);
+    setTimeout(()=>c.remove(), 1600);
+  }
+}
+function pulseHero(tipo){
+  const hero = document.querySelector('.hero');
+  if(!hero) return;
+  hero.classList.remove('fx-gain','fx-loss');
+  void hero.offsetWidth; // reinicia a animação
+  hero.classList.add(tipo==='receita' ? 'fx-gain' : 'fx-loss');
+  setTimeout(()=>hero.classList.remove('fx-gain','fx-loss'), 1400);
+}
+function goblinPeek(){
+  const spy = document.getElementById('goblinSpy');
+  spy.classList.add('peek');
+  setTimeout(()=>spy.classList.remove('peek'), 1900);
+}
+function moneyFX(tipo, valor){
+  // quanto maior o valor, mais moedas (escala log pra não explodir)
+  const qtd = Math.round(4 + Math.log10(Math.max(1,valor))*3);
+  spawnCoins(tipo, qtd);
+  pulseHero(tipo);
+  if(tipo==='gasto' && Math.random()<0.5) setTimeout(goblinPeek, 500); // o espião conferindo o estrago
+}
+// piscada de goblin no gnomo do header — o disfarce falha de vez em quando
+setInterval(()=>{
+  if(Math.random()<0.4){
+    const ic = document.querySelector('header .titlewrap .icon');
+    if(!ic) return;
+    ic.classList.add('blink');
+    setTimeout(()=>ic.classList.remove('blink'), 260);
+  }
+}, 9000);
+
+function fecharSplash(){
+  document.getElementById('splash').classList.add('hide');
+  localStorage.setItem('gnomio_visited','1');
+  if(!localStorage.getItem('gnomio_tour_visto')) setTimeout(mostrarTour, 700);
+}
+document.getElementById('splashEnter').addEventListener('click', fecharSplash);
+if(localStorage.getItem('gnomio_visited')) document.getElementById('splash').classList.add('hide');
+else setTimeout(fecharSplash, 2500);
+
+// ---------- tour de boas-vindas ----------
+const TOUR_PASSOS = [
+  {titulo:'cofres', texto:'É onde seu dinheiro mora — Carteira, Mercado Pago, poupança... Cada um tem um saldo que sobe e desce. Fica na aba "cofres".'},
+  {titulo:'lançar', texto:'Movimentações pontuais: "gastei 40 no mercado", "recebi 500 de freela". Fala com o Gnômio no chat, ou usa o formulário manual — os dois ficam na aba "lançar".'},
+  {titulo:'contas fixas', texto:'Coisas que se repetem todo mês, sempre no mesmo valor mais ou menos — aluguel, salário, assinatura. O Gnômio lança sozinho quando o dia chega.'}
+];
+let tourPasso = 0;
+function mostrarTour(){
+  tourPasso = 0;
+  renderTourPasso();
+  document.getElementById('tourOverlay').style.display = 'flex';
+}
+function renderTourPasso(){
+  const p = TOUR_PASSOS[tourPasso];
+  document.getElementById('tourIcon').innerHTML = ICON_GNOMO;
+  document.getElementById('tourTitulo').textContent = p.titulo;
+  document.getElementById('tourTexto').textContent = p.texto;
+  document.getElementById('tourProximo').textContent = tourPasso < TOUR_PASSOS.length-1 ? 'próximo' : 'entendi';
+}
+function fecharTour(){
+  document.getElementById('tourOverlay').style.display='none';
+  localStorage.setItem('gnomio_tour_visto','1');
+}
+document.getElementById('tourProximo').addEventListener('click', ()=>{
+  tourPasso++;
+  if(tourPasso >= TOUR_PASSOS.length){ fecharTour(); return; }
+  renderTourPasso();
+});
+document.getElementById('tourPular').addEventListener('click', fecharTour);
+
+// ---------- saudação e mês ----------
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+(function(){
+  const h = new Date().getHours();
+  const periodo = h<6 ? 'madrugada' : h<12 ? 'dia' : h<18 ? 'tarde' : 'noite';
+  document.getElementById('saudacao').textContent = gnomico('saudacao-'+periodo) + ' (é "boa '+periodo+'" em gnômico. eu acho.)';
+  document.getElementById('mesPill').textContent = MESES[new Date().getMonth()];
+})();
+
+// ---------- estado ----------
+const LS_KEY = 'gnomio_state_v1';
+
+function loadState(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(raw) return JSON.parse(raw);
+  return {
+    contas: [{id:'principal', nome:'Carteira', saldoInicial:0, taxa:0, periodo:'mes', criadaEm: todayISO()}],
+    transacoes: [],
+    contasFixas: [],
+    conquistas: [],
+    orcamentos: {}
+  };
+}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+let state = loadState();
+state.fixasLancadas = state.fixasLancadas || {};
+state.orcamentos = state.orcamentos || {};
+
+// ---------- util ----------
+function brl(v){
+  const n = Number(v)||0;
+  return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(v){ return String(v).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function monthKey(dateStr){ return dateStr.slice(0,7); }
+function currentMonthKey(){ return todayISO().slice(0,7); }
+
+// ---------- tabs ----------
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('section[id^="tab-"]').forEach(s=>s.style.display='none');
+    document.getElementById('tab-'+btn.dataset.tab).style.display='block';
+    if(btn.dataset.tab==='projecao') renderProjecao();
+    if(btn.dataset.tab==='conquistas') renderConquistas();
+    if(btn.dataset.tab==='historico') renderHistorico();
+  });
+});
+
+// ---------- tipo toggles ----------
+document.querySelectorAll('.tipo-toggle').forEach(group=>{
+  group.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      group.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on', b.dataset.tipo);
+    });
+  });
+});
+function getTipoFrom(group){ return group.querySelector('button.on').dataset.tipo; }
+
+function preencherSelectsContas(){
+  const opts = state.contas.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  document.getElementById('mConta').innerHTML = opts;
+  // contas fixas só podem sair de contas do dia a dia (sem rendimento) — nunca de caixinhas/poupança/investimento
+  const contasGasto = state.contas.filter(c=>!c.taxa);
+  const optsGasto = (contasGasto.length ? contasGasto : state.contas).map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  document.getElementById('fConta').innerHTML = optsGasto;
+}
+
+// ---------- contas ----------
+document.getElementById('cBanco').addEventListener('change', e=>{
+  const pr = BANCO_PRESETS[e.target.value];
+  if(!pr) return;
+  document.getElementById('cNome').value = pr.nome;
+  document.getElementById('cTaxa').value = pr.taxa;
+  document.getElementById('cPeriodo').value = pr.periodo;
+});
+
+document.getElementById('formConta').addEventListener('submit', e=>{
+  e.preventDefault();
+  const nome = document.getElementById('cNome').value.trim();
+  const saldoInicial = parseFloat(document.getElementById('cSaldo').value)||0;
+  const taxa = parseFloat(document.getElementById('cTaxa').value)||0;
+  const periodo = document.getElementById('cPeriodo').value;
+  if(!nome) return;
+  state.contas.push({id:uid(), nome, saldoInicial, taxa, periodo, criadaEm: todayISO(), ultimoRendimento: currentMonthKey()});
+  saveState();
+  e.target.reset();
+  document.getElementById('cTaxa').value = 0;
+  renderAll();
+  checkConquistas();
+});
+function delConta(id){
+  if(state.contas.length<=1){ alert('Precisa ter ao menos um cofre.'); return; }
+  const c = state.contas.find(x=>x.id===id);
+  if(!confirm('Apagar o cofre "'+(c?c.nome:'')+'"? Os lançamentos dela somem junto.')) return;
+  state.contas = state.contas.filter(c=>c.id!==id);
+  state.transacoes = state.transacoes.filter(t=>t.contaId!==id);
+  state.contasFixas = state.contasFixas.filter(f=>f.contaId!==id);
+  saveState();
+  renderAll();
+}
+
+// presets de banco: % do CDI é política de cada banco e pode mudar — é preset editável, não promessa
+const BANCO_PRESETS = {
+  mercadopago: {nome:'Mercado Pago', taxa:100, periodo:'cdi'},
+  nubank:      {nome:'Nubank caixinha', taxa:100, periodo:'cdi'},
+  picpay:      {nome:'PicPay', taxa:102, periodo:'cdi'},
+  inter:       {nome:'Inter', taxa:100, periodo:'cdi'},
+  cdb:         {nome:'CDB', taxa:100, periodo:'cdi'},
+  poupanca:    {nome:'Poupança', taxa:0.5, periodo:'mes'}
+};
+
+const CDI_FALLBACK = 14.9; // % a.a. — só usado se nunca conseguiu buscar online
+function cdiAnual(){ return (state.cdi && state.cdi.valor) || CDI_FALLBACK; }
+
+// busca o CDI atual (Banco Central / BrasilAPI), 1x por dia, cacheado no localStorage
+async function atualizarCDI(){
+  const hoje = todayISO();
+  if(state.cdi && state.cdi.buscadoEm === hoje) return;
+  let valor = null;
+  try{
+    const r = await fetch('https://brasilapi.com.br/api/taxas/v1/cdi');
+    valor = (await r.json()).valor;
+  }catch(_){
+    try{
+      const r = await fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.4389/dados/ultimos/1?formato=json');
+      const j = await r.json();
+      valor = parseFloat(String(j[0].valor).replace(',','.'));
+    }catch(__){ /* offline: fica no cache/fallback */ }
+  }
+  if(valor && valor>0 && valor<60){
+    state.cdi = {valor, buscadoEm: hoje};
+    saveState();
+    renderAll();
+  }
+}
+
+function taxaMensal(conta){
+  const t = (conta.taxa||0)/100;
+  if(conta.periodo==='cdi') return Math.pow(1 + (cdiAnual()/100)*t, 1/12)-1;
+  if(conta.periodo==='ano') return Math.pow(1+t, 1/12)-1;
+  return t;
+}
+function saldoBaseConta(conta){
+  let s = conta.saldoInicial||0;
+  const hoje = todayISO();
+  state.transacoes.filter(t=>t.contaId===conta.id && t.data<=hoje).forEach(t=>{
+    s += t.tipo==='receita' ? t.valor : -t.valor;
+  });
+  return s;
+}
+function saldoFuturoConta(conta){
+  const hoje = todayISO();
+  return state.transacoes.filter(t=>t.contaId===conta.id && t.data>hoje).reduce((a,t)=>a+(t.tipo==='receita'?t.valor:-t.valor),0);
+}
+function proximoMes(mk){ let [y,m]=mk.split('-').map(Number); m++; if(m>12){m=1;y++;} return y+'-'+String(m).padStart(2,'0'); }
+// rendimento vira transação real, lançada mês a mês (composto de verdade)
+function aplicarRendimentos(){
+  const mkNow = currentMonthKey();
+  let mudou = false;
+  state.contas.forEach(c=>{
+    if(!c.ultimoRendimento || !(c.taxa>0)){ c.ultimoRendimento = c.ultimoRendimento || mkNow; if(!(c.taxa>0)){ c.ultimoRendimento = mkNow; return; } }
+    while(c.ultimoRendimento < mkNow){
+      c.ultimoRendimento = proximoMes(c.ultimoRendimento);
+      const base = saldoBaseConta(c);
+      if(base>0){
+        state.transacoes.push({id:uid(), tipo:'receita', valor: base*taxaMensal(c), categoria:'rendimento', data: c.ultimoRendimento+'-01', nota:'rendimento automático', contaId:c.id});
+      }
+      mudou = true;
+    }
+  });
+  if(mudou) saveState();
+}
+function saldoConta(conta){ return saldoBaseConta(conta); }
+function rendimentoGerado(conta){
+  return state.transacoes.filter(t=>t.contaId===conta.id && t.categoria==='rendimento').reduce((a,t)=>a+t.valor,0);
+}
+function saldoTotalGeral(){
+  return state.contas.reduce((a,c)=>a+saldoConta(c),0);
+}
+
+const NOMES_SUBTITULO = ['onde o dinheiro passa correndo','o gnomo aprova este cofre','rende nada, como sempre','some sozinho, se não vigiar'];
+
+function saldoTotalAteData(dataLimite){
+  return state.contas.reduce((acc,c)=>{
+    let s = c.saldoInicial||0;
+    state.transacoes.filter(t=>t.contaId===c.id && t.data<=dataLimite).forEach(t=>{ s += t.tipo==='receita'?t.valor:-t.valor; });
+    return acc+s;
+  },0);
+}
+function renderEvolucaoSaldo(){
+  const el = document.getElementById('evolucaoSaldo');
+  if(!el) return;
+  const hoje = new Date();
+  const pontos = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(hoje.getFullYear(), hoje.getMonth()-i, 1);
+    const fimMes = new Date(d.getFullYear(), d.getMonth()+1, 0);
+    const limite = (i===0) ? todayISO() : fimMes.toISOString().slice(0,10);
+    pontos.push({label: MESES[d.getMonth()].slice(0,3), saldo: saldoTotalAteData(limite)});
+  }
+  const max = Math.max(...pontos.map(p=>Math.abs(p.saldo)), 1);
+  el.innerHTML = `<div style="display:flex; align-items:flex-end; gap:8px; height:130px;">` +
+    pontos.map(p=>{
+      const h = Math.max(4, Math.abs(p.saldo)/max*100);
+      const cor = p.saldo>=0 ? 'var(--good)' : 'var(--bad)';
+      return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;">
+        <div style="font-size:.66rem; color:var(--muted); margin-bottom:4px; white-space:nowrap;">${brl(p.saldo).replace('R$','').trim()}</div>
+        <div style="width:100%; max-width:32px; height:${h}%; background:${cor}; border-radius:6px 6px 0 0; transition:height .3s;"></div>
+        <div style="font-size:.72rem; color:var(--muted); margin-top:6px; text-transform:capitalize;">${p.label}</div>
+      </div>`;
+    }).join('') + `</div>`;
+}
+
+function renderCdiInfo(){
+  const el = document.getElementById('cdiInfo');
+  if(!el) return;
+  const v = cdiAnual().toFixed(2).replace('.',',');
+  el.innerHTML = state.cdi
+    ? `CDI agora: <b>${v}% a.a.</b> · busco sozinho 1x por dia (Banco Central). O % que cada banco paga é editável.`
+    : `CDI estimado: <b>${v}% a.a.</b> · sem internet ainda, atualizo quando conectar.`;
+}
+
+let editingContaId = null;
+function renderContas(){
+  renderCdiInfo();
+  const wrap = document.getElementById('listaContas');
+  const empty = document.getElementById('contasEmpty');
+  wrap.innerHTML='';
+  document.getElementById('totalContasHeader').textContent = brl(saldoTotalGeral());
+  if(state.contas.length===0){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  state.contas.forEach((c,i)=>{
+    const saldo = saldoConta(c);
+    const rend = rendimentoGerado(c);
+    const futuro = saldoFuturoConta(c);
+    const div = document.createElement('div');
+    div.className='conta-item' + (c.taxa>0?' rende':'') + (saldo<0?' negativa':'');
+    const sub = c.taxa>0
+      ? (c.periodo==='cdi'
+          ? c.taxa+'% do CDI (~'+(taxaMensal(c)*100).toFixed(2).replace('.',',')+'% ao mês)'
+          : c.taxa+'% ao '+(c.periodo==='ano'?'ano':'mês'))
+      : NOMES_SUBTITULO[i%NOMES_SUBTITULO.length];
+    if(editingContaId === c.id){
+      div.innerHTML = `
+        <div class="left">
+          <div class="badge">${c.taxa>0?ICON_GNOMO:ICON_BANK}</div>
+          <div>
+            <div class="nome">${esc(c.nome)}</div>
+            <div class="meta">saldo real hoje:</div>
+          </div>
+        </div>
+        <div class="valores" style="display:flex; gap:6px; align-items:center;">
+          <input type="number" step="0.01" class="edit-saldo-conta" value="${saldo.toFixed(2)}" style="width:110px; background:var(--panel2); border:1px solid var(--border2); color:var(--text); padding:6px 8px; border-radius:8px; font-family:var(--f-body);">
+          <button class="edit" data-act="salvar-saldo">✓</button>
+          <button class="del" data-act="cancelar-saldo">✕</button>
+        </div>
+      `;
+      div.querySelector('[data-act="salvar-saldo"]').addEventListener('click', ()=>{
+        const novo = parseFloat(div.querySelector('.edit-saldo-conta').value);
+        if(isNaN(novo)){ alert('Valor inválido.'); return; }
+        editingContaId = null;
+        ajustarSaldoContaSilencioso(c, novo);
+        renderAll();
+      });
+      div.querySelector('[data-act="cancelar-saldo"]').addEventListener('click', ()=>{ editingContaId = null; renderContas(); });
+    } else {
+      div.innerHTML = `
+        <div class="left">
+          <div class="badge">${c.taxa>0?ICON_GNOMO:ICON_BANK}</div>
+          <div>
+            <div class="nome">${esc(c.nome)}</div>
+            <div class="meta">${sub}</div>
+          </div>
+        </div>
+        <div class="valores">
+          <div class="saldo">${brl(saldo)}</div>
+          ${rend>0.005 ? `<div class="rend">+${brl(rend)} rendendo</div>` : (saldo<0 ? `<div class="rend neg">no vermelho</div>` : '')}
+          ${Math.abs(futuro)>0.005 ? `<div class="rend" style="color:var(--muted);">${futuro>0?'+':''}${brl(futuro)} agendado</div>` : ''}
+        </div>
+        <button class="edit" data-act="ajustar" title="ajustar saldo">✎</button>
+        <button class="del" data-act="apagar">✕</button>
+      `;
+      div.querySelector('[data-act="ajustar"]').addEventListener('click', ()=>{ editingContaId = c.id; renderContas(); });
+      div.querySelector('[data-act="apagar"]').addEventListener('click', ()=>delConta(c.id));
+    }
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- form manual ----------
+document.getElementById('mData').value = todayISO();
+document.getElementById('formManual').addEventListener('submit', e=>{
+  e.preventDefault();
+  const tipo = getTipoFrom(e.target.querySelector('.tipo-toggle'));
+  const contaId = document.getElementById('mConta').value;
+  const valor = parseFloat(document.getElementById('mValor').value);
+  const categoria = document.getElementById('mCategoria').value.trim() || 'outros';
+  const data = document.getElementById('mData').value || todayISO();
+  if(!valor || valor<=0) return;
+  addTransacao({tipo, valor, categoria, data, nota:'', contaId});
+  e.target.reset();
+  document.getElementById('mData').value = todayISO();
+  e.target.querySelectorAll('.tipo-toggle button').forEach(x=>x.classList.remove('on'));
+  e.target.querySelector('.tipo-toggle button[data-tipo="gasto"]').classList.add('on','gasto');
+});
+
+document.getElementById('formMeta').addEventListener('submit', e=>{
+  e.preventDefault();
+  const cat = document.getElementById('metaCategoria').value.trim().toLowerCase();
+  const valor = parseFloat(document.getElementById('metaValor').value);
+  if(!cat || !valor || valor<=0) return;
+  state.orcamentos[cat] = valor;
+  saveState();
+  e.target.reset();
+  renderAll();
+});
+function delMeta(cat){
+  delete state.orcamentos[cat];
+  saveState();
+  renderAll();
+}
+function renderMetas(){
+  const wrap = document.getElementById('listaMetas');
+  if(!wrap) return;
+  const cats = Object.keys(state.orcamentos);
+  wrap.innerHTML = cats.length===0 ? '' : cats.map(cat=>`
+    <span class="tag" style="display:inline-flex; align-items:center; gap:6px;">
+      ${esc(cat)}: ${brl(state.orcamentos[cat])}
+      <button class="del" data-cat="${esc(cat)}" style="font-size:.8rem;">✕</button>
+    </span>
+  `).join('');
+  wrap.querySelectorAll('button.del').forEach(b=>b.addEventListener('click', ()=>delMeta(b.dataset.cat)));
+}
+
+function addTransacao({tipo, valor, categoria, data, nota, contaId}){
+  const conta = contaId || state.contas[0].id;
+  const t = {id:uid(), tipo, valor:Math.abs(valor), categoria:(categoria||'outros').toLowerCase(), data, nota:nota||'', contaId:conta};
+  state.transacoes.push(t);
+  saveState();
+  renderAll();
+  checkConquistas();
+  if(t.data <= todayISO()) moneyFX(tipo, t.valor);
+  return t;
+}
+function delTransacao(id){
+  if(!confirm('Apagar esse lançamento?')) return;
+  state.transacoes = state.transacoes.filter(t=>t.id!==id);
+  saveState();
+  renderAll();
+  if(document.getElementById('tab-historico').style.display!=='none') renderHistorico();
+}
+
+// ---------- edição inline de lançamentos (usado no painel e no histórico) ----------
+let editingTransId = null;
+function renderTransacoesTable(tbody, lista){
+  tbody.innerHTML = '';
+  lista.forEach(t=>{
+    const tr = document.createElement('tr');
+    if(editingTransId === t.id){
+      const opts = state.contas.map(c=>`<option value="${c.id}" ${c.id===t.contaId?'selected':''}>${esc(c.nome)}</option>`).join('');
+      tr.innerHTML = `
+        <td><input type="date" class="edit-data" value="${t.data}"></td>
+        <td><select class="edit-conta">${opts}</select></td>
+        <td><input type="text" class="edit-categoria" value="${esc(t.categoria)}" list="categoriasList"></td>
+        <td><input type="number" step="0.01" class="edit-valor" value="${t.valor}"></td>
+        <td style="white-space:nowrap;">
+          <button class="edit" data-act="salvar">✓</button>
+          <button class="del" data-act="cancelar">✕</button>
+        </td>
+      `;
+      tr.querySelector('[data-act="salvar"]').addEventListener('click', ()=>{
+        const novoValor = parseFloat(tr.querySelector('.edit-valor').value);
+        if(!novoValor || novoValor<=0){ alert('Valor inválido.'); return; }
+        const real = state.transacoes.find(x=>x.id===t.id);
+        if(real){
+          real.data = tr.querySelector('.edit-data').value || t.data;
+          real.contaId = tr.querySelector('.edit-conta').value;
+          real.categoria = (tr.querySelector('.edit-categoria').value.trim() || 'outros').toLowerCase();
+          real.valor = Math.abs(novoValor);
+          saveState();
+        }
+        editingTransId = null;
+        renderAll();
+        if(document.getElementById('tab-historico').style.display!=='none') renderHistorico();
+      });
+      tr.querySelector('[data-act="cancelar"]').addEventListener('click', ()=>{
+        editingTransId = null;
+        renderAll();
+        if(document.getElementById('tab-historico').style.display!=='none') renderHistorico();
+      });
+    } else {
+      const contaNome = (state.contas.find(c=>c.id===t.contaId)||{}).nome || '—';
+      tr.innerHTML = `
+        <td>${t.data.split('-').reverse().join('/')}</td>
+        <td>${esc(contaNome)}</td>
+        <td><span class="tag">${esc(t.categoria)}</span></td>
+        <td class="valor ${t.tipo}">${t.tipo==='gasto'?'-':'+'}${brl(t.valor)}</td>
+        <td style="white-space:nowrap;"><button class="edit" data-act="editar">✎</button><button class="del" data-act="apagar">✕</button></td>
+      `;
+      tr.querySelector('[data-act="editar"]').addEventListener('click', ()=>{
+        editingTransId = t.id;
+        renderAll();
+        if(document.getElementById('tab-historico').style.display!=='none') renderHistorico();
+      });
+      tr.querySelector('[data-act="apagar"]').addEventListener('click', ()=>delTransacao(t.id));
+    }
+    tbody.appendChild(tr);
+  });
+}
+function preencherFiltrosHistorico(){
+  const selCofre = document.getElementById('filtroCofre');
+  const valCofre = selCofre.value;
+  selCofre.innerHTML = '<option value="">todos</option>' + state.contas.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  selCofre.value = valCofre;
+  const selCat = document.getElementById('filtroCategoria');
+  const valCat = selCat.value;
+  const cats = [...new Set(state.transacoes.map(t=>t.categoria))].sort();
+  selCat.innerHTML = '<option value="">todas</option>' + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  selCat.value = valCat;
+}
+function renderHistorico(){
+  preencherFiltrosHistorico();
+  const cofre = document.getElementById('filtroCofre').value;
+  const cat = document.getElementById('filtroCategoria').value;
+  const mes = document.getElementById('filtroMes').value;
+  let lista = [...state.transacoes];
+  if(cofre) lista = lista.filter(t=>t.contaId===cofre);
+  if(cat) lista = lista.filter(t=>t.categoria===cat);
+  if(mes) lista = lista.filter(t=>monthKey(t.data)===mes);
+  lista.sort((a,b)=>b.data.localeCompare(a.data) || 0);
+  document.getElementById('historicoEmpty').style.display = lista.length===0 ? 'block' : 'none';
+  renderTransacoesTable(document.querySelector('#tabelaHistorico tbody'), lista);
+}
+['filtroCofre','filtroCategoria','filtroMes'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderHistorico);
+});
+document.getElementById('filtroLimpar').addEventListener('click', ()=>{
+  document.getElementById('filtroCofre').value='';
+  document.getElementById('filtroCategoria').value='';
+  document.getElementById('filtroMes').value='';
+  renderHistorico();
+});
+
+function preencherCategoriasDatalist(){
+  const dl = document.getElementById('categoriasList');
+  if(!dl) return;
+  const cats = [...new Set(state.transacoes.map(t=>t.categoria))].sort();
+  dl.innerHTML = cats.map(c=>`<option value="${esc(c)}"></option>`).join('');
+}
+
+// ---------- contas fixas ----------
+document.getElementById('formFixa').addEventListener('submit', e=>{
+  e.preventDefault();
+  const tipo = getTipoFrom(e.target.querySelector('.tipo-toggle'));
+  const nome = document.getElementById('fNome').value.trim();
+  const contaId = document.getElementById('fConta').value;
+  const valor = parseFloat(document.getElementById('fValor').value);
+  const dia = parseInt(document.getElementById('fDia').value);
+  const inicioMes = document.getElementById('fInicio').value || null;
+  const variavel = document.getElementById('fVariavel').checked;
+  if(!nome || !valor || !dia) return;
+  state.contasFixas.push({id:uid(), tipo, nome, valor:Math.abs(valor), dia, contaId, inicioMes, variavel, criadaEm: todayISO()});
+  saveState();
+  e.target.reset();
+  e.target.querySelectorAll('.tipo-toggle button').forEach(x=>x.classList.remove('on'));
+  e.target.querySelector('.tipo-toggle button[data-tipo="gasto"]').classList.add('on','gasto');
+  document.getElementById('fVariavel').checked = false;
+  autoLancarFixas();
+  renderFixas();
+  renderAll();
+  checkConquistas();
+});
+function delFixa(id){
+  if(!confirm('Apagar essa conta fixa?')) return;
+  state.contasFixas = state.contasFixas.filter(f=>f.id!==id);
+  saveState();
+  renderFixas();
+}
+function lancarFixa(id, valorOverride){
+  const f = state.contasFixas.find(x=>x.id===id);
+  if(!f) return;
+  const mk = currentMonthKey();
+  state.fixasLancadas[mk] = state.fixasLancadas[mk] || [];
+  if(state.fixasLancadas[mk].includes(id)) return;
+  state.fixasLancadas[mk].push(id);
+  const valor = (valorOverride!=null && !isNaN(valorOverride)) ? Math.abs(valorOverride) : f.valor;
+  addTransacao({tipo:f.tipo, valor, categoria:f.nome.toLowerCase(), data: mk+'-'+String(f.dia).padStart(2,'0'), nota:'conta fixa (automático)', contaId:f.contaId});
+}
+
+function autoLancarFixas(){
+  const diaAtual = new Date().getDate();
+  const mk = currentMonthKey();
+  state.fixasLancadas[mk] = state.fixasLancadas[mk] || [];
+  let lancados = [];
+  state.contasFixas.forEach(f=>{
+    const jaComecou = !f.inicioMes || f.inicioMes<=mk;
+    if(!jaComecou || f.variavel || f.dia>diaAtual || state.fixasLancadas[mk].includes(f.id)) return;
+    const dataDoDiaEsseMes = mk+'-'+String(f.dia).padStart(2,'0');
+    if(f.criadaEm && f.criadaEm > dataDoDiaEsseMes) return; // criada depois que esse dia já tinha passado — não cobra retroativo, espera o mês que vem
+    lancarFixa(f.id);
+    lancados.push(f);
+  });
+  if(lancados.length){
+    const nomes = lancados.map(f=>`"${f.nome}"`).join(', ');
+    falaGnomo(`ele lançou sozinho o que já venceu esse mês: ${nomes}. confere se bateu — valor errado, apaga e refaz na mão.`);
+  }
+}
+
+function renderFixas(){
+  const wrap = document.getElementById('listaFixas');
+  const empty = document.getElementById('fixasEmpty');
+  wrap.innerHTML='';
+  const diaAtual = new Date().getDate();
+  const mk = currentMonthKey();
+  const ativasGasto = state.contasFixas.filter(f=>f.tipo==='gasto' && (!f.inicioMes || f.inicioMes<=mk));
+  document.getElementById('totalFixasHeader').textContent = brl(ativasGasto.reduce((a,f)=>a+f.valor,0));
+  if(state.contasFixas.length===0){ empty.style.display='block'; return; }
+  empty.style.display='none';
+  const lanc = state.fixasLancadas[mk] || [];
+  [...state.contasFixas].sort((a,b)=>a.dia-b.dia).forEach(f=>{
+    const contaNome = (state.contas.find(c=>c.id===f.contaId)||{}).nome || '—';
+    const lancada = lanc.includes(f.id);
+    const jaComecou = !f.inicioMes || f.inicioMes<=mk;
+    const dataDoDiaEsseMes = mk+'-'+String(f.dia).padStart(2,'0');
+    const retroativo = !!(f.criadaEm && f.criadaEm > dataDoDiaEsseMes);
+    const vencida = jaComecou && !retroativo && f.dia <= diaAtual && !lancada;
+    const [aiY,aiM] = (f.inicioMes||'').split('-');
+    const metaInicio = !jaComecou ? ` · começa ${aiM}/${aiY}` : (retroativo && !lancada ? ' · começa mês que vem' : '');
+    const varTag = f.variavel ? ' · valor variável' : '';
+    const div = document.createElement('div');
+    div.className='fixa-item';
+    if(vencida && f.variavel){
+      div.innerHTML = `
+        <div>
+          <div class="nome">${esc(f.nome)}</div>
+          <div class="meta">todo dia ${f.dia} · ${esc(contaNome)}${varTag}</div>
+        </div>
+        <div class="right" style="gap:6px;">
+          <input type="number" step="0.01" class="confirmar-valor-fixa" value="${f.valor}" style="width:90px; background:var(--panel2); border:1px solid var(--border2); color:var(--text); padding:6px 8px; border-radius:8px; font-family:var(--f-body);">
+          <button class="btn-lancar" data-act="confirmar">confirmar</button>
+          <button class="del" data-id="${f.id}">✕</button>
+        </div>
+      `;
+      div.querySelector('[data-act="confirmar"]').addEventListener('click', ()=>{
+        const v = parseFloat(div.querySelector('.confirmar-valor-fixa').value);
+        if(!v || v<=0){ alert('Valor inválido.'); return; }
+        lancarFixa(f.id, v);
+        renderFixas(); renderAll();
+      });
+      div.querySelector('.del').addEventListener('click', ()=>delFixa(f.id));
+    } else {
+      div.innerHTML = `
+        <div>
+          <div class="nome">${esc(f.nome)}</div>
+          <div class="meta">todo dia ${f.dia} · ${esc(contaNome)}${metaInicio}${varTag}</div>
+        </div>
+        <div class="right">
+          <div class="valor-fixa ${f.tipo==='gasto'?'valor gasto':'valor receita'}">${brl(f.valor)}</div>
+          ${lancada ? `<span class="status-pago">${f.tipo==='gasto'?'pago ✓':'recebido ✓'}</span>`
+            : vencida ? `<button class="btn-lancar" data-id="${f.id}">lançar agora</button>`
+            : `<span class="status-agendado">agendado</span>`}
+          <button class="del" data-id="${f.id}">✕</button>
+        </div>
+      `;
+      const bl = div.querySelector('.btn-lancar');
+      if(bl) bl.addEventListener('click', ()=>lancarFixa(f.id));
+      div.querySelector('.del').addEventListener('click', ()=>delFixa(f.id));
+    }
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- chat parser ----------
+const CATEGORIAS_HINT = ['mercado','uber','ifood','farmacia','farmácia','luz','agua','água','internet','aluguel',
+  'academia','streaming','netflix','spotify','gasolina','combustivel','combustível','restaurante','lazer',
+  'roupa','salario','salário','freela','presente','viagem','saude','saúde','escola','curso'];
+
+const BANCOS_HINT = ['mercado pago','banco inter','nubank','picpay','itaú','itau','bradesco','santander','caixinha','cofrinho','poupança','poupanca','carteira','caixa','banco','c6'];
+
+function norm(str){ return String(str).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+
+// "6.040,78" / "1.500" / "30,5" / "80" -> número
+function numBR(v){
+  v = String(v);
+  if(v.includes('.') && v.includes(',')) v = v.replace(/\./g,'').replace(',','.');
+  else if(v.includes(',')) v = v.replace(',','.');
+  else if(/\.\d{3}$/.test(v)) v = v.replace(/\./g,'');
+  return parseFloat(v);
+}
+
+function extrairValor(f){
+  const re = /\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?/g;
+  const matches = [...f.matchAll(re)];
+  if(matches.length===0) return null;
+  const antes = m => f.slice(Math.max(0, m.index-6), m.index);
+  let pool = matches.filter(m=>!/dia\s*$/i.test(antes(m)));
+  if(pool.length===0) pool = matches;
+  const pick =
+    pool.find(m=>/(?:por|r\$)\s*$/i.test(antes(m))) ||    // "2 pizzas por 80" -> 80
+    pool.find(m=>/[.,]\d{1,2}$/.test(m[0])) ||             // número com centavos
+    pool.reduce((a,b)=> numBR(b[0])>numBR(a[0]) ? b : a);  // senão, o maior
+  const v = numBR(pick[0]);
+  return isNaN(v) ? null : v;
+}
+
+function detectarTipo(f){
+  const nf = norm(f);
+  const G = ['gastei','paguei','comprei','torrei','custou','assinei','pix pra','perdi'];
+  const R = ['recebi','ganhei','caiu','vendi','lucrei','lucro','me pagaram','me pagou','faturei'];
+  const S = ['tenho guardado','guardado','guardei','tenho na','tenho no','ta na conta','saldo','apliquei','depositei','investi'];
+  if(G.some(w=>nf.includes(norm(w)))) return 'gasto';
+  if(R.some(w=>nf.includes(norm(w)))) return 'receita';
+  if(S.some(w=>nf.includes(norm(w)))) return 'saldo';
+  if(['entrou','freela','salario'].some(w=>nf.includes(w))) return 'receita';
+  return null; // não deu pra saber -> pergunta
+}
+
+function detectarConta(f){
+  const nf = norm(f);
+  let melhor = null;
+  state.contas.forEach(c=>{
+    const n = norm(c.nome);
+    if(n.length>=3 && nf.includes(n) && (!melhor || n.length>norm(melhor.nome).length)) melhor = c;
+  });
+  if(melhor) return {conta:melhor, sugestao:null};
+  const b = BANCOS_HINT.slice().sort((x,y)=>y.length-x.length).find(x=>nf.includes(norm(x)));
+  return {conta:null, sugestao: b||null};
+}
+
+function detectarCategoria(f, contaNome){
+  let nf = norm(f);
+  if(contaNome) nf = nf.split(norm(contaNome)).join(' ');
+  BANCOS_HINT.forEach(b=>{ nf = nf.split(norm(b)).join(' '); }); // "mercado pago" não vira categoria "mercado"
+  const hit = CATEGORIAS_HINT.find(c=>nf.includes(norm(c)));
+  if(hit) return norm(hit);
+  const de = nf.match(/(?:de|no|na|com)\s+([a-z]{3,})/);
+  return de ? de[1] : 'outros';
+}
+
+function detectarData(f){
+  const nf = norm(f);
+  const d = new Date();
+  if(nf.includes('anteontem')) d.setDate(d.getDate()-2);
+  else if(nf.includes('ontem')) d.setDate(d.getDate()-1);
+  else {
+    const m = nf.match(/dia\s+(\d{1,2})/);
+    if(m){
+      const dd = parseInt(m[1]);
+      if(dd>=1 && dd<=31){ if(dd>d.getDate()) d.setMonth(d.getMonth()-1); d.setDate(dd); }
+    }
+  }
+  return d.toISOString().slice(0,10);
+}
+
+const RESPOSTAS_GASTO = ['anotado. o caderninho não esquece, e eu vou lembrar você disso na hora certa.','de novo isso? tá, anotado — mas eu tô rindo de você por dentro.','gastando, gastando... alguém aqui não aprende. anotado mesmo assim, contra minha vontade.'];
+const RESPOSTAS_RECEITA = ['entrou grana! relaxa, já separei uma lista de jeitos de você fundir isso rapidinho. anotado.','caiu no cofre — aproveita rápido antes que você mesmo dê um jeito de sumir com ela.'];
+
+function addChatBubble(text, who, icon, undoIds){
+  const feed = document.getElementById('chatFeed');
+  const b = document.createElement('div');
+  if(who==='me'){
+    b.className = 'bubble me';
+    b.textContent = text;
+  } else {
+    b.className = 'bubble bot';
+    const undoBtn = (undoIds && undoIds.length) ? `<button class="btn-undo" type="button">desfazer</button>` : '';
+    b.innerHTML = `<div class="icon">${icon||ICON_GOBLIN}</div><div class="txt">${text}${undoBtn}</div>`;
+    if(undoIds && undoIds.length){
+      b.querySelector('.btn-undo').addEventListener('click', function(){
+        state.transacoes = state.transacoes.filter(t=>!undoIds.includes(t.id));
+        saveState(); renderAll();
+        this.parentElement.querySelector('.txt') ? (b.querySelector('.txt').innerHTML = 'desfeito. como se nunca tivesse acontecido.') : null;
+      });
+    }
+  }
+  feed.appendChild(b);
+  feed.scrollTop = feed.scrollHeight;
+  return b;
+}
+
+let _qr = null;
+function addQuickReplies(opts){
+  const feed = document.getElementById('chatFeed');
+  if(_qr) _qr.remove();
+  const row = document.createElement('div');
+  row.className = 'qr-row';
+  opts.forEach(o=>{
+    const b = document.createElement('button');
+    b.textContent = o.label;
+    b.addEventListener('click', ()=>{ row.remove(); _qr=null; o.cb(); });
+    row.appendChild(b);
+  });
+  feed.appendChild(row);
+  _qr = row;
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function processarFrase(frase){
+  const valor = extrairValor(frase);
+  if(valor===null || valor<=0){
+    addChatBubble('não peguei o valor, gênio. tenta algo tipo "gastei 40 no mercado hoje"', 'bot');
+    return;
+  }
+  const det = detectarConta(frase);
+  const dados = {frase, valor, tipo: detectarTipo(frase), conta: det.conta, sugestao: det.sugestao};
+  if(!dados.tipo){
+    addChatBubble(`${brl(valor)} sumiu de algum jeito. isso foi o quê?`, 'bot');
+    addQuickReplies([
+      {label:'gasto', cb:()=>{ dados.tipo='gasto'; concluirLancamento(dados); }},
+      {label:'entrada', cb:()=>{ dados.tipo='receita'; concluirLancamento(dados); }},
+      {label:'dinheiro guardado', cb:()=>{ dados.tipo='saldo'; concluirLancamento(dados); }},
+      {label:'esquece', cb:()=> addChatBubble('tá bom, finjo que não vi. ignorado.', 'bot')}
+    ]);
+    return;
+  }
+  concluirLancamento(dados);
+}
+
+function concluirLancamento(dados){
+  if(dados.tipo==='saldo'){ tratarSaldo(dados); return; }
+  const contaId = dados.conta ? dados.conta.id : state.contas[0].id;
+  const categoria = detectarCategoria(dados.frase, dados.conta ? dados.conta.nome : null);
+  const data = detectarData(dados.frase);
+  const t = addTransacao({tipo:dados.tipo, valor:dados.valor, categoria, data, nota:dados.frase, contaId});
+  const contaNome = (state.contas.find(c=>c.id===contaId)||{}).nome || '';
+  const frases = dados.tipo==='receita' ? RESPOSTAS_RECEITA : RESPOSTAS_GASTO;
+  const linha = frases[Math.floor(Math.random()*frases.length)];
+  addChatBubble(`${linha} ${dados.tipo} de ${brl(dados.valor)} em "${esc(categoria)}" (${data.split('-').reverse().join('/')}) · conta ${esc(contaNome)}`, 'bot', null, [t.id]);
+}
+
+function tratarSaldo(dados){
+  if(dados.conta){ ajustarSaldoConta(dados.conta, dados.valor); return; }
+  if(dados.sugestao){
+    addChatBubble(`guardado, é? ${brl(dados.valor)}. quer que eu abra um cofre novo chamado "${esc(dados.sugestao)}" pra prender essa grana antes que ela escape de novo?`, 'bot');
+    addQuickReplies([
+      {label:'cria', cb:()=>{
+        const prKey = Object.keys(BANCO_PRESETS).find(k=>norm(BANCO_PRESETS[k].nome).includes(norm(dados.sugestao)) || norm(dados.sugestao).includes(norm(BANCO_PRESETS[k].nome)));
+        const pr = prKey ? BANCO_PRESETS[prKey] : null;
+        const c = {id:uid(), nome:dados.sugestao, saldoInicial:dados.valor, taxa: pr?pr.taxa:0, periodo: pr?pr.periodo:'mes', criadaEm:todayISO(), ultimoRendimento:currentMonthKey()};
+        state.contas.push(c);
+        saveState(); renderAll(); checkConquistas();
+        falaGnomo(`cofre "${esc(c.nome)}" selado com ${brl(dados.valor)}${c.periodo==='cdi' ? `, rendendo ${c.taxa}% do CDI` : ''}. tá na aba cofres.`);
+      }},
+      {label:'botar em outro cofre', cb:()=> perguntarConta(dados)},
+      {label:'esquece', cb:()=> addChatBubble('tá bom, finjo que não vi. ignorado.', 'bot')}
+    ]);
+    return;
+  }
+  perguntarConta(dados);
+}
+
+function perguntarConta(dados){
+  addChatBubble(`${brl(dados.valor)} guardado, uhum. em qual cofre eu escondo isso agora?`, 'bot');
+  addQuickReplies(state.contas.map(c=>({label:c.nome, cb:()=> ajustarSaldoConta(c, dados.valor)})));
+}
+
+function ajustarSaldoConta(conta, valor){
+  conta.saldoInicial += (valor - saldoConta(conta));
+  saveState(); renderAll(); checkConquistas();
+  falaGnomo(`o cofre "${esc(conta.nome)}" agora guarda ${brl(valor)}. ele diz que tá de olho.`);
+}
+function ajustarSaldoContaSilencioso(conta, valor){
+  conta.saldoInicial += (valor - saldoConta(conta));
+  saveState(); checkConquistas();
+}
+
+// ---------- cérebro IA (Gemini Flash, opcional, free tier) ----------
+const IA_KEY_LS = 'gnomio_geminikey';
+function iaKey(){ return localStorage.getItem(IA_KEY_LS) || ''; }
+function renderIaStatus(){
+  const el = document.getElementById('iaStatusTxt');
+  if(el) el.textContent = iaKey() ? 'cérebro: IA conectada (Gemini)' : 'cérebro: regras locais';
+  const btn = document.getElementById('iaConfigBtn');
+  if(btn) btn.textContent = iaKey() ? 'config da IA' : 'conectar IA';
+}
+document.getElementById('iaConfigBtn').addEventListener('click', ()=>{
+  const box = document.getElementById('iaConfigBox');
+  box.style.display = box.style.display==='none' ? 'flex' : 'none';
+  document.getElementById('iaKey').value = iaKey();
+});
+document.getElementById('iaSalvar').addEventListener('click', ()=>{
+  const k = document.getElementById('iaKey').value.trim();
+  if(!k){ alert('Cola a chave primeiro.'); return; }
+  localStorage.setItem(IA_KEY_LS, k);
+  document.getElementById('iaConfigBox').style.display='none';
+  renderIaStatus();
+  falaGnomo('o cérebro grande despertou. agora dá pra falar de qualquer jeito que ele entende.');
+});
+document.getElementById('iaRemover').addEventListener('click', ()=>{
+  localStorage.removeItem(IA_KEY_LS);
+  document.getElementById('iaConfigBox').style.display='none';
+  renderIaStatus();
+  addChatBubble('voltei pro modo econômico. menos esperto, mas pelo menos não me custa nada — que nem você.', 'bot');
+});
+
+const IA_SYS = `Você é o Goblin do Gnômio: um contador sovina, canalha e ácido, que cuida (a contragosto) do dinheiro do usuário. Você não é gentil — implica, zoa, ironiza cada gasto bobo, mas nunca mente nos números nem deixa de fazer o trabalho direito. Pense num agiota engraçado que descumpre etiqueta mas é honesto nas contas. Responda SEMPRE e SOMENTE com JSON válido, sem markdown, neste formato:
+{"acoes":[{"tipo":"gasto","valor":0,"categoria":"","contaId":"","data":"YYYY-MM-DD"}],"resposta":"sua fala"}
+Regras:
+- tipo é "gasto", "receita" ou "saldo".
+- gasto/receita: lançamentos; valor positivo. Se a mensagem citar vários lançamentos, crie uma ação para cada um.
+- categoria: curta, minúscula, e deve descrever a CAUSA REAL do gasto/receita (mercado, uber, luz, salário, lazer, roubo, perda...) — nunca a primeira palavra "que parece categoria" na frase. Palavras soltas, desabafos ou interjeições no início da mensagem NÃO são a categoria a menos que sejam claramente o item comprado. Ex: "Banana. Me roubaram. R$ 6,00." → categoria "roubo" (banana ali é desabafo, não o motivo do gasto). Ex: "Comprei uma banana, 6 reais" → categoria "mercado" ou "lanche" (aí sim é o item). Se o motivo real não ficar claro, use "outros" em vez de chutar uma palavra da frase.
+- saldo: o usuário declarou quanto TEM guardado numa conta; valor = saldo total declarado. contaId de conta existente ou "nova:Nome" para criar conta nova.
+- contaId: use o id da conta citada; se nenhuma for citada em gasto/receita, use a primeira da lista.
+- data: hoje, salvo se o usuário citar outro dia (ontem, dia 5...).
+- Mensagem sem lançamento (pergunta, desabafo, papo): acoes=[] e responda usando os dados fornecidos.
+- Dúvida real sobre valor ou intenção: acoes=[] e pergunte.
+- resposta: 1 a 2 frases, pt-BR, minúsculas, sem emoji, sem markdown. Humor canalha, ácido, mordaz — pode implicar com o usuário, chamar de gastador, zoar a escolha, ser debochado — mas NUNCA seja cruel de verdade sobre dinheiro apertado, dívida ou algo que soe como sofrimento real; aí o tom vira seco e direto, sem piada. Ao falar sobre onde o dinheiro está guardado, chame de "cofre" (nunca "conta") — é o termo usado na interface do app.`;
+
+let iaHist = [];
+
+function iaContexto(){
+  const mk = currentMonthKey();
+  const doMes = state.transacoes.filter(t=>monthKey(t.data)===mk);
+  const entradas = doMes.filter(t=>t.tipo==='receita').reduce((a,t)=>a+t.valor,0);
+  const saidas = doMes.filter(t=>t.tipo==='gasto').reduce((a,t)=>a+t.valor,0);
+  return JSON.stringify({
+    hoje: todayISO(),
+    contas: state.contas.map(c=>({id:c.id, nome:c.nome, saldo: Math.round(saldoConta(c)*100)/100})),
+    mes: {entradas: Math.round(entradas*100)/100, saidas: Math.round(saidas*100)/100},
+    fixas: state.contasFixas.map(f=>({nome:f.nome, tipo:f.tipo, valor:f.valor, dia:f.dia}))
+  });
+}
+
+function aplicarAcoesIA(acoes){
+  let idsCriados = [];
+  (acoes||[]).forEach(a=>{
+    if(!a || !a.tipo) return;
+    if(a.tipo==='saldo'){
+      let conta = null;
+      if(typeof a.contaId==='string' && a.contaId.indexOf('nova:')===0){
+        const nome = a.contaId.slice(5).trim() || 'Conta';
+        conta = {id:uid(), nome, saldoInicial:0, taxa:0, periodo:'mes', criadaEm:todayISO(), ultimoRendimento:currentMonthKey()};
+        state.contas.push(conta);
+      } else {
+        conta = state.contas.find(c=>c.id===a.contaId) || state.contas[0];
+      }
+      conta.saldoInicial += (Number(a.valor)||0) - saldoConta(conta);
+      saveState();
+    } else if(a.tipo==='gasto' || a.tipo==='receita'){
+      const v = Math.abs(Number(a.valor)||0);
+      if(v<=0) return;
+      const contaId = state.contas.find(c=>c.id===a.contaId) ? a.contaId : state.contas[0].id;
+      const t = addTransacao({tipo:a.tipo, valor:v, categoria:String(a.categoria||'outros').toLowerCase(), data:(a.data||todayISO()), nota:'via IA', contaId});
+      idsCriados.push(t.id);
+    }
+  });
+  if(idsCriados.length){ renderAll(); checkConquistas(); }
+  return idsCriados;
+}
+
+const GEMINI_MODEL = 'gemini-3.5-flash';
+
+async function gnomioIA(frase){
+  const pensando = addChatBubble('…', 'bot');
+  const setTxt = (t)=>{ pensando.querySelector('.txt').innerHTML = t; };
+  try{
+    const historico = iaHist.slice(-6);
+    const contents = historico.concat([{role:'user', parts:[{text:'[dados atuais: '+iaContexto()+']\nmensagem: '+frase}]}]);
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent';
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-goog-api-key': iaKey()
+      },
+      body: JSON.stringify({
+        systemInstruction: {parts:[{text:IA_SYS}]},
+        contents,
+        generationConfig: {
+          responseMimeType:'application/json',
+          maxOutputTokens:2048,
+          thinkingConfig:{thinkingLevel:'low'}
+        }
+      })
+    });
+    if(r.status===400 || r.status===403){
+      const errBody = await r.json().catch(()=>null);
+      const msg = errBody && errBody.error && errBody.error.message || '';
+      console.error('Gemini erro', r.status, msg);
+      setTxt('essa chave não abre esse cofre ('+(msg?esc(msg):'chave inválida')+'). confere lá no "config da IA".');
+      return;
+    }
+    if(r.status===429){
+      setTxt('o cofre grande tá sobrecarregado agora (limite do free tier) — resolvendo aqui com regras locais.');
+      processarFrase(frase);
+      return;
+    }
+    if(!r.ok){
+      const errText = await r.text().catch(()=>'');
+      console.error('Gemini http error', r.status, errText);
+      throw new Error('http '+r.status+' '+errText.slice(0,200));
+    }
+    const data = await r.json();
+    let txt = (data.candidates && data.candidates[0] && data.candidates[0].content &&
+               data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
+               data.candidates[0].content.parts[0].text) || '';
+    txt = txt.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+    const out = JSON.parse(txt);
+    const idsCriados = aplicarAcoesIA(out.acoes);
+    pensando.remove();
+    addChatBubble(esc(out.resposta || 'anotado.'), 'bot', ICON_GOBLIN, idsCriados);
+    iaHist.push({role:'user', parts:[{text:frase}]});
+    iaHist.push({role:'model', parts:[{text:txt}]});
+    if(iaHist.length>12) iaHist = iaHist.slice(-12);
+  }catch(err){
+    console.error('Gemini falhou', err);
+    pensando.remove();
+    addChatBubble('sem sinal com o cérebro grande ('+esc(String(err&&err.message||err))+') — resolvi aqui com as regras locais mesmo.', 'bot');
+    processarFrase(frase);
+  }
+}
+
+function handleChat(){
+  const input = document.getElementById('chatInput');
+  const val = input.value.trim();
+  if(!val) return;
+  addChatBubble(val, 'me');
+  input.value='';
+  if(iaKey()) gnomioIA(val);
+  else processarFrase(val);
+}
+document.getElementById('chatSend').addEventListener('click', handleChat);
+document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') handleChat(); });
+
+// ---------- conquistas ----------
+const CONQUISTAS = [
+  {id:'primeira-conta', nome:'primeiro cofre', desc:'criou seu primeiro cofre extra além da carteira.', tipo:'gnomo',
+    check: s => s.contas.length>1},
+  {id:'primeiro-lancamento', nome:'primeiro passo', desc:'fez seu primeiro lançamento.', tipo:'gnomo',
+    check: s => s.transacoes.length>=1},
+  {id:'dez-lancamentos', nome:'gnomo dedicado', desc:'registrou 10 lançamentos.', tipo:'gnomo',
+    check: s => s.transacoes.length>=10},
+  {id:'investidor-araque', nome:'investidor de araque', desc:'criou um cofre com rendimento.', tipo:'gnomo',
+    check: s => s.contas.some(c=>c.taxa>0)},
+  {id:'saldo-negativo', nome:'primeira dívida', desc:'algum cofre ficou no vermelho.', tipo:'goblin',
+    check: s => s.contas.some(c=>saldoConta(c)<0)},
+  {id:'estourou-limite', nome:'estourou o cartão', desc:'limite? conceito abstrato. um cofre ficou abaixo de -R$500.', tipo:'goblin',
+    check: s => s.contas.some(c=>saldoConta(c)<-500)},
+  {id:'saiu-vermelho', nome:'saiu do vermelho', desc:'o saldo total virou positivo.', tipo:'gnomo',
+    check: s => saldoTotalGeral()>0 && s.transacoes.length>0},
+  {id:'cofre-cheio', nome:'cofre cheio', desc:'saldo total bateu R$ 1.000.', tipo:'gnomo',
+    check: s => saldoTotalGeral()>=1000},
+  {id:'vida-goblin', nome:'vida de goblin', desc:'5 gastos em lazer/ifood no mesmo mês.', tipo:'goblin',
+    check: s => {
+      const mk = currentMonthKey();
+      const n = s.transacoes.filter(t=>t.tipo==='gasto' && monthKey(t.data)===mk && ['lazer','ifood'].includes(t.categoria)).length;
+      return n>=5;
+    }},
+  {id:'gastou-tudo-dia', nome:'gastou tudo no mesmo dia', desc:'recebeu e gastou tudo no mesmo dia. o entregador já te chama de sócio.', tipo:'goblin',
+    check: s => {
+      const porDia = {};
+      s.transacoes.forEach(t=>{
+        porDia[t.data] = porDia[t.data] || {receita:0, gasto:0};
+        porDia[t.data][t.tipo] += t.valor;
+      });
+      return Object.values(porDia).some(d=>d.receita>0 && d.gasto>=d.receita);
+    }},
+  {id:'cinco-contas-fixas', nome:'vida adulta', desc:'cadastrou 5 contas fixas. o gnomo tirou o chapéu.', tipo:'gnomo',
+    check: s => s.contasFixas.length>=5},
+  {id:'cinquenta-lancamentos', nome:'escriba do cofre', desc:'50 lançamentos registrados. o caderninho tá ficando pesado.', tipo:'gnomo',
+    check: s => s.transacoes.length>=50},
+  {id:'cem-lancamentos', nome:'vício em anotar', desc:'100 lançamentos. você anota até o pastel da feira.', tipo:'goblin',
+    check: s => s.transacoes.length>=100},
+  {id:'tres-cofres', nome:'colecionador de cofres', desc:'3 cofres ou mais. tá espalhando tesouro que nem esquilo.', tipo:'gnomo',
+    check: s => s.contas.length>=3},
+  {id:'cinco-mil', nome:'dragãozinho', desc:'saldo total bateu R$ 5.000. já dá pra dormir em cima.', tipo:'gnomo',
+    check: s => saldoTotalGeral()>=5000},
+  {id:'dez-mil', nome:'dragão de verdade', desc:'R$ 10.000 guardados. o gnomo pede autógrafo.', tipo:'gnomo',
+    check: s => saldoTotalGeral()>=10000},
+  {id:'gasto-elite', nome:'gastador de elite', desc:'um único gasto de R$ 1.000+. doeu até no goblin.', tipo:'goblin',
+    check: s => s.transacoes.some(t=>t.tipo==='gasto' && t.valor>=1000)},
+  {id:'meta-criada', nome:'promessa de ano novo', desc:'criou uma meta de orçamento. vamos ver quanto tempo dura.', tipo:'goblin',
+    check: s => Object.keys(s.orcamentos||{}).length>=1},
+  {id:'meta-estourada', nome:'meta? qual meta?', desc:'estourou o teto de uma categoria. a promessa durou pouco.', tipo:'goblin',
+    check: s => {
+      const mk = currentMonthKey();
+      const gastos = {};
+      s.transacoes.filter(t=>t.tipo==='gasto' && monthKey(t.data)===mk).forEach(t=>{ gastos[t.categoria]=(gastos[t.categoria]||0)+t.valor; });
+      return Object.entries(s.orcamentos||{}).some(([cat,teto])=>gastos[cat]>teto);
+    }},
+  {id:'azar-anotado', nome:'até o azar você anota', desc:'registrou um roubo ou perda. respeito pela honestidade.', tipo:'goblin',
+    check: s => s.transacoes.some(t=>['roubo','perda','furto'].includes(t.categoria))},
+  {id:'historiador', nome:'historiador do cofre', desc:'lançamentos em 3 meses diferentes. isso virou hábito.', tipo:'gnomo',
+    check: s => new Set(s.transacoes.map(t=>monthKey(t.data))).size>=3},
+  {id:'semana-limpa', nome:'semana de jejum', desc:'7 dias seguidos sem gasto nenhum. o goblin desconfia que você tava sem internet.', tipo:'goblin',
+    check: s => {
+      const gastos = [...new Set(s.transacoes.filter(t=>t.tipo==='gasto').map(t=>t.data))].sort();
+      if(gastos.length<2) return false;
+      for(let i=1;i<gastos.length;i++){
+        const dif = (new Date(gastos[i]) - new Date(gastos[i-1])) / 86400000;
+        if(dif>=7) return true;
+      }
+      return false;
+    }}
+];
+
+function checkConquistas(){
+  CONQUISTAS.forEach(c=>{
+    if(!state.conquistas.includes(c.id) && c.check(state)){
+      state.conquistas.push(c.id);
+      saveState();
+      showToast(c);
+    }
+  });
+}
+
+function showToast(conquista){
+  const area = document.getElementById('toastArea');
+  const div = document.createElement('div');
+  div.className = 'toast';
+  div.innerHTML = `
+    <div class="icon">${conquista.tipo==='goblin'?ICON_GOBLIN:ICON_GNOMO}</div>
+    <div>
+      <div class="t">conquista desbloqueada</div>
+      <div class="n">${conquista.nome}</div>
+    </div>
+  `;
+  area.appendChild(div);
+  setTimeout(()=>{ div.remove(); }, 5000);
+}
+
+function renderConquistas(){
+  const grid = document.getElementById('conquistasGrid');
+  grid.innerHTML='';
+  document.getElementById('conquistasContagem').textContent = state.conquistas.length;
+  document.getElementById('conquistasTotal').textContent = CONQUISTAS.length;
+  CONQUISTAS.forEach(c=>{
+    const unlocked = state.conquistas.includes(c.id);
+    const div = document.createElement('div');
+    div.className = 'conquista' + (unlocked?' unlocked':'');
+    div.innerHTML = `
+      <div class="toprow">
+        <div class="icon">${c.tipo==='goblin'?ICON_GOBLIN:ICON_GNOMO}</div>
+        <div class="tagpill ${c.tipo}">${c.tipo}</div>
+      </div>
+      <div class="nome">${c.nome}</div>
+      <div class="desc">${unlocked ? c.desc : '???'}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ---------- render dashboard ----------
+function renderAll(){
+  preencherSelectsContas();
+  const saldo = saldoTotalGeral();
+  const saldoEl = document.getElementById('saldoAtual');
+  if(saldoExibido===null || Math.abs(saldo-saldoExibido)<0.005){
+    saldoEl.textContent = brl(saldo);
+    saldoEl.style.color = saldo>=0 ? 'var(--accent)' : 'var(--bad)';
+  } else {
+    animarSaldo(saldoEl, saldoExibido, saldo);
+  }
+  saldoExibido = saldo;
+
+  const fraseIcon = document.getElementById('fraseIcon');
+  const frase = document.getElementById('fraseMascote');
+  const subSaldo = document.getElementById('subSaldo');
+  if(saldo < 0){
+    fraseIcon.innerHTML = ICON_GOBLIN; frase.textContent='"no vermelho de novo? eu já tava rindo antes até de olhar o número"';
+    subSaldo.textContent = 'o estrago foi grande dessa vez';
+  } else if(saldo < 200){
+    fraseIcon.innerHTML = ICON_GOBLIN; frase.textContent='"grana curta esse mês — trata de segurar essa mão boba"';
+    subSaldo.textContent = 'o que sobrou depois do estrago';
+  } else if(saldo < 1000){
+    fraseIcon.innerHTML = ICON_GNOMO;
+    frase.innerHTML = `"${gnomico('veredito-ok')}"<span style="display:block; font-size:.7rem; color:var(--muted2); font-style:normal;">(goblin traduz: "tá indo bem, segue assim")</span>`;
+    subSaldo.textContent = 'o que sobrou depois do estrago';
+  } else {
+    fraseIcon.innerHTML = ICON_GNOMO;
+    frase.innerHTML = `"${gnomico('veredito-farto')}"<span style="display:block; font-size:.7rem; color:var(--muted2); font-style:normal;">(goblin traduz: "cofre farto, o velho aprova")</span>`;
+    subSaldo.textContent = 'até que você se cuidou esse mês';
+  }
+
+  const mk = currentMonthKey();
+  const doMes = state.transacoes.filter(t=>monthKey(t.data)===mk);
+  const entradas = doMes.filter(t=>t.tipo==='receita').reduce((a,t)=>a+t.valor,0);
+  const saidas = doMes.filter(t=>t.tipo==='gasto').reduce((a,t)=>a+t.valor,0);
+  const setStat = (id, txt)=>{
+    const el = document.getElementById(id);
+    if(el.textContent !== txt && el.textContent !== ''){
+      el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    }
+    el.textContent = txt;
+  };
+  setStat('statEntradas', brl(entradas));
+  setStat('statSaidas', brl(saidas));
+  document.getElementById('pillEntradas').textContent = 'entrou ' + brl(entradas);
+  document.getElementById('pillSaidas').textContent = 'saiu ' + brl(saidas);
+  const sobraEl = document.getElementById('statSobra');
+  sobraEl.classList.toggle('good', entradas-saidas>=0);
+  sobraEl.classList.toggle('bad', entradas-saidas<0);
+  setStat('statSobra', brl(entradas-saidas));
+
+  const gastosPorCat = {};
+  doMes.filter(t=>t.tipo==='gasto').forEach(t=>{
+    gastosPorCat[t.categoria] = (gastosPorCat[t.categoria]||0)+t.valor;
+  });
+  const catWrap = document.getElementById('categoriasBars');
+  const catEmpty = document.getElementById('categoriasEmpty');
+  catWrap.innerHTML='';
+  const entries = Object.entries(gastosPorCat).sort((a,b)=>b[1]-a[1]);
+  if(entries.length===0){ catEmpty.style.display='block'; }
+  else {
+    catEmpty.style.display='none';
+    const max = entries[0][1];
+    entries.forEach(([cat,v])=>{
+      const meta = state.orcamentos[cat];
+      const row = document.createElement('div');
+      row.className='bar-row';
+      if(meta){
+        const pct = Math.min(100, v/meta*100);
+        const cor = v>meta ? 'var(--bad)' : 'var(--good)';
+        row.innerHTML = `<div>${esc(cat)}</div><div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(0)}%; background:${cor};"></div></div><div>${brl(v)} / ${brl(meta)}</div>`;
+      } else {
+        row.innerHTML = `<div>${esc(cat)}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/max*100).toFixed(0)}%"></div></div><div>${brl(v)}</div>`;
+      }
+      catWrap.appendChild(row);
+    });
+  }
+  renderMetas();
+
+  const tbody = document.querySelector('#tabelaRecentes tbody');
+  const recentes = [...state.transacoes].sort((a,b)=>b.data.localeCompare(a.data) || 0).slice(0,10);
+  document.getElementById('recentesEmpty').style.display = recentes.length===0 ? 'block' : 'none';
+  renderTransacoesTable(tbody, recentes);
+  preencherCategoriasDatalist();
+
+  renderFixas();
+  renderContas();
+  renderEvolucaoSaldo();
+  checkLembreteBackup();
+}
+
+// ---------- projeção ----------
+function diasNoMes(y,m){ return new Date(y, m+1, 0).getDate(); }
+
+const VEREDITOS_POSITIVOS = ['sobra grana, dá pra respirar. não dá pra ostentar.','fechou no azul. o gnomo tirou o chapéu.','positivo! um jantar chique e volta pro risco, então segura.'];
+const VEREDITOS_NEGATIVOS = ['vai faltar grana. hora de conversar com o cofrinho.','no vermelho. o goblin já tá rindo.','vai fechar no negativo, ajusta o passo aí.'];
+
+function renderProjecao(){
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const totalDias = diasNoMes(y,m);
+  const diaAtual = now.getDate();
+  const mk = currentMonthKey();
+
+  document.getElementById('projTituloMes').textContent = MESES[m] + ', o filme';
+  document.getElementById('projTituloProximo').textContent = MESES[(m+1)%12] + ', a sequência';
+
+  const doMes = state.transacoes.filter(t=>monthKey(t.data)===mk);
+  const gastoAteAgora = doMes.filter(t=>t.tipo==='gasto').reduce((a,t)=>a+t.valor,0);
+  const receitaAteAgora = doMes.filter(t=>t.tipo==='receita').reduce((a,t)=>a+t.valor,0);
+
+  const nomesFixas = new Set(state.contasFixas.map(f=>f.nome.toLowerCase()));
+  const gastoVariavel = doMes.filter(t=>t.tipo==='gasto' && !nomesFixas.has(t.categoria)).reduce((a,t)=>a+t.valor,0);
+
+  // base histórica: média do gasto variável dos últimos meses FECHADOS (até 3)
+  const variavelPorMes = {};
+  state.transacoes.filter(t=>t.tipo==='gasto' && !nomesFixas.has(t.categoria) && monthKey(t.data)<mk).forEach(t=>{
+    const k = monthKey(t.data);
+    variavelPorMes[k] = (variavelPorMes[k]||0)+t.valor;
+  });
+  const mesesFechados = Object.keys(variavelPorMes).sort().slice(-3);
+  const mediaHistorica = mesesFechados.length ? mesesFechados.reduce((a,k)=>a+variavelPorMes[k],0)/mesesFechados.length : null;
+
+  // projeção do variável restante:
+  let projetadoRestante, comoCalculei;
+  const fracaoRestante = (totalDias-diaAtual)/totalDias;
+  if(mediaHistorica!==null){
+    // âncora: histórico. o restante do mês tende à média histórica proporcional aos dias que faltam
+    projetadoRestante = Math.max(0, mediaHistorica*fracaoRestante);
+    comoCalculei = `média de gasto variável dos últimos ${mesesFechados.length} ${mesesFechados.length===1?'mês fechado':'meses fechados'} (${brl(mediaHistorica)}/mês), proporcional aos ${totalDias-diaAtual} dias que faltam`;
+  } else if(diaAtual>=7){
+    // sem histórico, mas já tem amostra razoável do mês: usa o ritmo atual
+    projetadoRestante = (gastoVariavel/diaAtual)*(totalDias-diaAtual);
+    comoCalculei = `seu ritmo até agora (${brl(gastoVariavel/diaAtual)}/dia em ${diaAtual} dias) esticado até o fim do mês — sem meses anteriores pra comparar ainda`;
+  } else {
+    // início de mês sem histórico: não extrapola, assume só o que já é conhecido
+    projetadoRestante = 0;
+    comoCalculei = `ainda é começo de mês e não tenho histórico — só contei o que já aconteceu + as contas fixas. a previsão melhora conforme você usa`;
+  }
+
+  // lançamentos futuros já agendados dentro deste mês também são certeza, não chute
+  const hoje = todayISO();
+  const fimMesISO = mk+'-'+String(totalDias).padStart(2,'0');
+  const agendadosGasto = state.transacoes.filter(t=>t.tipo==='gasto' && t.data>hoje && t.data<=fimMesISO).reduce((a,t)=>a+t.valor,0);
+  const agendadosReceita = state.transacoes.filter(t=>t.tipo==='receita' && t.data>hoje && t.data<=fimMesISO).reduce((a,t)=>a+t.valor,0);
+
+  const lancMk = state.fixasLancadas[mk] || [];
+  const fixasAtivasMk = state.contasFixas.filter(f=>!f.inicioMes || f.inicioMes<=mk);
+  const fixasGastoRestantes = fixasAtivasMk.filter(f=>f.tipo==='gasto' && !lancMk.includes(f.id)).reduce((a,f)=>a+f.valor,0);
+  const fixasReceitaRestantes = fixasAtivasMk.filter(f=>f.tipo==='receita' && !lancMk.includes(f.id)).reduce((a,f)=>a+f.valor,0);
+
+  const gastoEstimadoTotal = gastoAteAgora + projetadoRestante + fixasGastoRestantes + agendadosGasto;
+  const receitaEstimadaTotal = receitaAteAgora + fixasReceitaRestantes + agendadosReceita;
+  const saldoProjetadoFim = saldoTotalGeral() + (receitaEstimadaTotal-receitaAteAgora) - (gastoEstimadoTotal-gastoAteAgora);
+
+  const pctGasto = gastoEstimadoTotal>0 ? Math.min(100, gastoEstimadoTotal/Math.max(receitaEstimadaTotal,gastoEstimadoTotal)*100) : 0;
+  const veredito1 = saldoProjetadoFim>=0 ? VEREDITOS_POSITIVOS[0] : VEREDITOS_NEGATIVOS[0];
+
+  document.getElementById('projAtual').innerHTML = `
+    <div style="background:var(--panel2); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; gap:14px; margin-bottom:16px;">
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:.85rem;"><span style="font-weight:700; color:var(--good);">deve entrar</span><span style="font-weight:800;">${brl(receitaEstimadaTotal)}</span></div>
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:100%; background:var(--good);"></div></div>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:.85rem;"><span style="font-weight:700; color:var(--bad);">deve sair</span><span style="font-weight:800;">${brl(gastoEstimadoTotal)}</span></div>
+        <div class="proj-bar"><div class="proj-bar-fill" style="width:${pctGasto.toFixed(0)}%; background:var(--bad);"></div></div>
+      </div>
+      <div style="border-top:1px dashed var(--border2); padding-top:12px; display:flex; justify-content:space-between; align-items:baseline;">
+        <div style="color:var(--muted); font-size:.85rem; font-weight:700;">saldo previsto</div>
+        <div style="font-family:var(--f-head); font-weight:800; font-size:1.7rem; color:${saldoProjetadoFim>=0?'var(--good)':'var(--bad)'};">${saldoProjetadoFim>=0?'+ ':'− '}${brl(Math.abs(saldoProjetadoFim))}</div>
+      </div>
+      <div style="font-size:.76rem; color:var(--muted2); line-height:1.5;">como cheguei nisso: gastos já feitos (${brl(gastoAteAgora)}) + fixas que ainda vêm (${brl(fixasGastoRestantes)})${agendadosGasto>0.005?` + lançamentos já agendados (${brl(agendadosGasto)})`:''}${projetadoRestante>0.005?` + estimativa de variáveis (${brl(projetadoRestante)})`:''}. estimativa: ${comoCalculei}.</div>
+    </div>
+    <div class="grid3">
+      <div class="stat"><div class="k">Dia do mês</div><div class="v" style="color:var(--text);">${diaAtual} / ${totalDias}</div></div>
+      <div class="stat"><div class="k">Já gasto</div><div class="v bad">${brl(gastoAteAgora)}</div></div>
+      <div class="stat"><div class="k">Fixas que ainda vêm</div><div class="v bad">${brl(fixasGastoRestantes)}</div></div>
+    </div>
+    <div class="tip-box" style="margin-top:16px; margin-bottom:0;">
+      <div class="icon">${ICON_GOBLIN}</div>
+      <div class="txt">"${veredito1}"</div>
+    </div>
+  `;
+
+  const proxData = new Date(y, m+1, 1);
+  const mkProximo = proxData.getFullYear()+'-'+String(proxData.getMonth()+1).padStart(2,'0');
+  const fixasAtivasProximo = state.contasFixas.filter(f=>!f.inicioMes || f.inicioMes<=mkProximo);
+  const nomesFixasGasto = new Set(fixasAtivasProximo.filter(f=>f.tipo==='gasto').map(f=>f.nome.toLowerCase()));
+  const totalFixasGasto = fixasAtivasProximo.filter(f=>f.tipo==='gasto').reduce((a,f)=>a+f.valor,0);
+  const totalFixasReceita = fixasAtivasProximo.filter(f=>f.tipo==='receita').reduce((a,f)=>a+f.valor,0);
+
+  const meses = {};
+  state.transacoes.forEach(t=>{
+    const k = monthKey(t.data);
+    if(k===mk) return;
+    if(!meses[k]) meses[k]={gasto:0};
+    if(t.tipo==='gasto' && !nomesFixasGasto.has(t.categoria)) meses[k].gasto += t.valor;
+  });
+  const chaves = Object.keys(meses).sort().slice(-3);
+  const mediaVariavel = chaves.length>0
+    ? chaves.reduce((a,k)=>a+meses[k].gasto,0)/chaves.length
+    : gastoAteAgora * (totalDias/Math.max(diaAtual,1)) * 0.6;
+
+  const rendimentoProjetadoProximoMes = state.contas.reduce((a,c)=>{
+    const base = saldoConta(c);
+    if(base<=0) return a;
+    return a + base*taxaMensal(c);
+  },0);
+
+  const gastoProximoMes = totalFixasGasto + mediaVariavel;
+  const saldoProjetadoProximo = saldoProjetadoFim + totalFixasReceita + rendimentoProjetadoProximoMes - gastoProximoMes;
+  const veredito2 = saldoProjetadoProximo>=0 ? VEREDITOS_POSITIVOS[Math.floor(Math.random()*VEREDITOS_POSITIVOS.length)] : VEREDITOS_NEGATIVOS[Math.floor(Math.random()*VEREDITOS_NEGATIVOS.length)];
+
+  document.getElementById('projProximo').innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+      <div class="fixa-item" style="margin-bottom:0;"><div><div class="nome">contas fixas <span style="color:var(--muted); font-weight:400;">· aluguel &amp; cia</span></div></div><div class="valor-fixa valor gasto">${brl(totalFixasGasto)}</div></div>
+      <div class="fixa-item" style="margin-bottom:0;"><div><div class="nome">gasto variável estimado <span style="color:var(--muted); font-weight:400;">· com base no histórico</span></div></div><div class="valor-fixa valor gasto">${brl(mediaVariavel)}</div></div>
+      <div class="fixa-item" style="margin-bottom:0;"><div><div class="nome">receitas fixas previstas</div></div><div class="valor-fixa valor receita">${brl(totalFixasReceita)}</div></div>
+      <div class="fixa-item" style="margin-bottom:0;"><div><div class="nome">rendimento dos cofres</div></div><div class="valor-fixa valor receita">${brl(rendimentoProjetadoProximoMes)}</div></div>
+    </div>
+    <p style="color:var(--muted); font-size:.85rem; margin:0 0 14px;">
+      ${chaves.length>0 ? `Variável estimado com base na média dos últimos ${chaves.length} mes(es) com dados.` : 'Ainda sem histórico suficiente pra média — essa é uma estimativa grosseira, vai ficar mais precisa com o tempo.'}
+    </p>
+    <div style="border-top:1px dashed var(--border2); padding-top:12px; display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px;">
+      <div style="color:var(--muted); font-size:.85rem; font-weight:700;">saldo previsto no fim do próximo mês</div>
+      <div style="font-family:var(--f-head); font-weight:800; font-size:1.7rem; color:${saldoProjetadoProximo>=0?'var(--good)':'var(--bad)'};">${saldoProjetadoProximo>=0?'+ ':'− '}${brl(Math.abs(saldoProjetadoProximo))}</div>
+    </div>
+    <div class="tip-box" style="margin-bottom:0;">
+      <div class="icon">${ICON_GNOMO}</div>
+      <div class="txt">"${veredito2}"</div>
+    </div>
+  `;
+}
+
+// ---------- backup ----------
+function fazerBackup(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gnomio-backup-'+todayISO()+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  state.ultimoBackupEm = todayISO();
+  state.transacoesNoUltimoBackup = state.transacoes.length;
+  saveState();
+  checkLembreteBackup();
+}
+document.getElementById('btnExport').addEventListener('click', fazerBackup);
+document.getElementById('backupBannerExportar').addEventListener('click', fazerBackup);
+document.getElementById('backupBannerDepois').addEventListener('click', ()=>{
+  const d = new Date(); d.setDate(d.getDate()+7);
+  state.snoozeBackupAte = d.toISOString().slice(0,10);
+  saveState();
+  document.getElementById('backupBanner').style.display = 'none';
+});
+function checkLembreteBackup(){
+  const banner = document.getElementById('backupBanner');
+  if(!banner) return;
+  const hoje = todayISO();
+  if(state.snoozeBackupAte && state.snoozeBackupAte > hoje){ banner.style.display='none'; return; }
+  const novosDesdeBackup = state.transacoes.length - (state.transacoesNoUltimoBackup||0);
+  const nuncaFezBackup = !state.ultimoBackupEm;
+  let mostrar = false, msg = '';
+  if(nuncaFezBackup && state.transacoes.length>=8){
+    mostrar = true;
+    msg = `você já tem ${state.transacoes.length} lançamentos e nunca exportou um backup. Gnômio é 100% local — se limpar o navegador, perde tudo.`;
+  } else if(!nuncaFezBackup && novosDesdeBackup>=20){
+    mostrar = true;
+    msg = `${novosDesdeBackup} lançamentos novos desde seu último backup (${state.ultimoBackupEm.split('-').reverse().join('/')}). Vale exportar de novo.`;
+  }
+  banner.style.display = mostrar ? 'block' : 'none';
+  if(mostrar) document.getElementById('backupBannerTxt').textContent = msg;
+}
+document.getElementById('btnImport').addEventListener('click', ()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const novo = JSON.parse(r.result);
+      if(!Array.isArray(novo.contas) || !Array.isArray(novo.transacoes)) throw new Error('inválido');
+      if(!confirm('Substituir os dados atuais pelo backup?')) return;
+      state = novo;
+      state.fixasLancadas = state.fixasLancadas || {};
+      state.conquistas = state.conquistas || [];
+      state.contasFixas = state.contasFixas || [];
+      saveState();
+      aplicarRendimentos();
+      autoLancarFixas();
+      renderAll();
+    }catch(_){ alert('Arquivo de backup inválido.'); }
+  };
+  r.readAsText(file);
+  e.target.value = '';
+});
+
+aplicarRendimentos();
+autoLancarFixas();
+renderAll();
+checkConquistas();
+atualizarCDI();
+renderIaStatus();
+addChatBubble('oi, mortal. desembucha os gastos, as receitas e o que anda escondendo guardado por aí.', 'bot', ICON_GOBLIN);
+
+// ---------- instalar como app (PWA) ----------
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{}); // se os arquivos não estiverem juntos no servidor, só não instala — o app continua funcionando normal
+  });
+}
+
+const rodandoInstalado = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const eIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+
+if(!rodandoInstalado){
+  const row = document.getElementById('installRow');
+  row.style.display = 'flex';
+
+  if(eIos){
+    document.getElementById('btnInstallIos').style.display = 'inline-block';
+  } else {
+    // Chrome/Edge/Android: escuta o navegador oferecer o prompt nativo
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e)=>{
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('btnInstall').style.display = 'inline-block';
+    });
+    document.getElementById('btnInstall').addEventListener('click', async ()=>{
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('btnInstall').style.display = 'none';
+    });
+    window.addEventListener('appinstalled', ()=>{
+      document.getElementById('btnInstall').style.display = 'none';
+    });
+  }
+}
+
+document.getElementById('btnInstallIos').addEventListener('click', ()=>{
+  document.getElementById('iosInstallOverlay').style.display = 'flex';
+});
+document.getElementById('iosInstallFechar').addEventListener('click', ()=>{
+  document.getElementById('iosInstallOverlay').style.display = 'none';
+});
+</script>
+</body>
+</html>
