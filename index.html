@@ -21,10 +21,10 @@
 <style>
   :root{
     /* Cofre Esmeralda — fundo verde saturado, cards quase-pretos, dourado escasso */
-    --lvl0:#0a0908; /* containers (nav) — o mais escuro */
-    --lvl1:#0e0d0c; /* superfície padrão dos cards */
-    --lvl2:#0e0d0c; /* cards */
-    --lvl3:#151310; /* hero / elemento mais elevado */
+    --lvl0:#0a0b0a; /* containers (nav) — o mais escuro */
+    --lvl1:#0e100e; /* superfície padrão dos cards */
+    --lvl2:#0e100e; /* cards */
+    --lvl3:#141712; /* hero / elemento mais elevado */
     --bg:#16382a;
     --panel:var(--lvl2);
     --panel2:var(--lvl1);
@@ -59,8 +59,9 @@
     --elev-2:0 1px 0 rgba(0,0,0,0.35), 0 3px 6px rgba(0,0,0,0.28), 0 14px 22px -14px rgba(0,0,0,0.6);
     /* névoa da toca — esmeralda saturado, fluido, cards flutuam nele bem mais escuros */
   }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  *{box-sizing:border-box; min-width:0;}
+  html{scroll-behavior:smooth; overflow-x:hidden; max-width:100%;}
+  body{overflow-x:hidden; max-width:100%;}
   body{
     margin:0;
     font-family:var(--f-body);
@@ -170,7 +171,7 @@
 
   .hero{ /* o livro-caixa: capa de couro, nível mais elevado do ambiente */
     position:relative; overflow:hidden;
-    background:linear-gradient(180deg, var(--lvl3), #0a0908);
+    background:linear-gradient(180deg, var(--lvl3), var(--lvl0));
     border:1px solid var(--border2);
     border-radius:var(--radius);
     padding:24px;
@@ -233,7 +234,7 @@
 
   .chat-box{ /* balcão de atendimento do goblin — fenda entalhada na madeira */
     display:flex; gap:8px; align-items:center;
-    background:#080706;
+    background:#0a0c09;
     border:1px solid var(--border); border-radius:12px; padding:6px 6px 6px 18px; margin-bottom:10px;
     box-shadow:inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(233,200,130,0.05);
   }
@@ -254,7 +255,7 @@
   .chat-hint b{color:var(--accent);}
 
   .feed{display:flex; flex-direction:column; gap:10px; max-height:240px; overflow-y:auto; margin-bottom:12px;}
-  .bubble{padding:10px 16px; font-size:.9rem; max-width:78%;}
+  .bubble{padding:10px 16px; font-size:.9rem; max-width:78%; overflow-wrap:break-word; word-break:break-word;}
   .bubble.me{align-self:flex-end; background:var(--accent2); color:var(--on-accent2); border-radius:18px 18px 4px 18px; font-weight:600;}
   .bubble.bot{align-self:flex-start; display:flex; gap:10px; align-items:flex-end; max-width:88%;}
   .bubble.bot .icon{width:30px; height:30px; flex-shrink:0;}
@@ -269,7 +270,7 @@
   form.manual .field{display:flex; flex-direction:column; gap:4px;}
   form.manual label{font-size:.74rem; color:var(--muted); font-weight:700;}
   form.manual input, form.manual select{ /* fendas entalhadas na madeira */
-    background:#080706; border:1px solid var(--border); color:var(--text);
+    background:#0a0c09; border:1px solid var(--border); color:var(--text);
     padding:10px 12px; border-radius:8px; font-size:.9rem; font-family:var(--f-body);
     box-shadow:inset 0 2px 4px rgba(0,0,0,0.5);
   }
@@ -283,7 +284,7 @@
   form.manual button:active{box-shadow:inset 0 2px 4px rgba(0,0,0,0.4); transform:translateY(1px);}
   .tipo-toggle{display:flex; gap:6px;}
   .tipo-toggle button{
-    flex:1; background:#080706; border:1px solid var(--border); color:var(--muted);
+    flex:1; background:#0a0c09; border:1px solid var(--border); color:var(--muted);
     padding:9px; border-radius:8px; cursor:pointer; font-size:.83rem; font-weight:700; font-family:var(--f-body);
     box-shadow:inset 0 2px 4px rgba(0,0,0,0.4);
   }
@@ -306,7 +307,7 @@
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     box-shadow:0 2px 5px rgba(0,0,0,0.28), inset 0 -1px 0 rgba(42,36,22,0.06);
   }
-  .item-osso .nome{color:var(--ink,#2a2416); font-weight:800; font-size:.9rem;}
+  .item-osso .nome{color:var(--ink,#2a2416); font-weight:800; font-size:.9rem; overflow-wrap:break-word;}
   .item-osso .data, .item-osso .meta{color:var(--ink-soft,#8a7f5e); font-size:.75rem; margin-top:2px;}
   .item-osso .valor{font-weight:800; font-size:.9rem;}
   .item-osso .valor.ganho{color:var(--ink-good,#1e5c3a);}
@@ -350,9 +351,9 @@
   }
 
   .bar-row{display:grid; grid-template-columns:110px 1fr 70px; align-items:center; gap:10px; margin-bottom:10px; font-size:.85rem;}
-  .bar-track{height:10px; background:#060504; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);} /* canaleta gravada */
+  .bar-track{height:10px; background:#080a07; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);} /* canaleta gravada */
   .bar-fill{height:100%; background:var(--muted2); border-radius:999px;} /* neutro — dourado só quando estoura meta (definido no JS) */
-  .proj-bar{height:14px; background:#060504; border-radius:999px; overflow:hidden; margin:6px 0; box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);}
+  .proj-bar{height:14px; background:#080a07; border-radius:999px; overflow:hidden; margin:6px 0; box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);}
   .proj-bar-fill{height:100%; border-radius:999px;}
 
   .conquistas-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:12px;}
@@ -686,6 +687,11 @@
     </div>
 
     <div class="card">
+      <h2>gastos vs recebidos</h2>
+      <div id="balancaMes"></div>
+    </div>
+
+    <div class="card">
       <h2>saldo nos últimos meses</h2>
       <div id="evolucaoSaldo"></div>
     </div>
@@ -897,6 +903,14 @@
         <div class="field">
           <label>Mês</label>
           <input type="month" id="filtroMes">
+        </div>
+        <div class="field">
+          <label>Tipo</label>
+          <select id="filtroTipo">
+            <option value="">todos</option>
+            <option value="receita">só recebido</option>
+            <option value="gasto">só gasto</option>
+          </select>
         </div>
         <button type="button" id="filtroLimpar">limpar filtros</button>
       </form>
@@ -1300,6 +1314,41 @@ function saldoTotalAteData(dataLimite){
     return acc+s;
   },0);
 }
+function renderBalancaMes(){
+  const el = document.getElementById('balancaMes');
+  if(!el) return;
+  const mk = currentMonthKey();
+  const doMes = state.transacoes.filter(t=>monthKey(t.data)===mk);
+  const entradas = doMes.filter(t=>t.tipo==='receita').reduce((a,t)=>a+t.valor,0);
+  const saidas = doMes.filter(t=>t.tipo==='gasto').reduce((a,t)=>a+t.valor,0);
+  const max = Math.max(entradas, saidas, 1);
+  const pctEnt = (entradas/max*100).toFixed(0);
+  const pctSai = (saidas/max*100).toFixed(0);
+  el.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:.82rem; margin-bottom:5px;">
+          <span style="color:var(--good); font-weight:800;">recebido</span>
+          <span style="color:var(--good); font-weight:800;">${brl(entradas)}</span>
+        </div>
+        <div class="bar-track" style="height:16px;"><div style="height:100%; width:${pctEnt}%; background:var(--good); border-radius:999px; transition:width .7s var(--ease-out);"></div></div>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:.82rem; margin-bottom:5px;">
+          <span style="color:var(--bad); font-weight:800;">gasto</span>
+          <span style="color:var(--bad); font-weight:800;">${brl(saidas)}</span>
+        </div>
+        <div class="bar-track" style="height:16px;"><div style="height:100%; width:${pctSai}%; background:var(--bad); border-radius:999px; transition:width .7s var(--ease-out);"></div></div>
+      </div>
+      <div style="text-align:center; font-size:.8rem; color:var(--muted); padding-top:4px; border-top:1px solid var(--border);">
+        ${entradas>=saidas
+          ? `sobrou ${brl(entradas-saidas)} esse mês`
+          : `gastou ${brl(saidas-entradas)} a mais do que entrou`}
+      </div>
+    </div>
+  `;
+}
+
 function renderEvolucaoSaldo(){
   const el = document.getElementById('evolucaoSaldo');
   if(!el) return;
@@ -1616,21 +1665,24 @@ function renderHistorico(){
   const cofre = document.getElementById('filtroCofre').value;
   const cat = document.getElementById('filtroCategoria').value;
   const mes = document.getElementById('filtroMes').value;
+  const tipo = document.getElementById('filtroTipo').value;
   let lista = [...state.transacoes];
   if(cofre) lista = lista.filter(t=>t.contaId===cofre);
   if(cat) lista = lista.filter(t=>t.categoria===cat);
   if(mes) lista = lista.filter(t=>monthKey(t.data)===mes);
+  if(tipo) lista = lista.filter(t=>t.tipo===tipo);
   lista.sort((a,b)=>b.data.localeCompare(a.data) || 0);
   document.getElementById('historicoEmpty').style.display = lista.length===0 ? 'block' : 'none';
   renderTransacoesTable(document.getElementById('tabelaHistorico'), lista);
 }
-['filtroCofre','filtroCategoria','filtroMes'].forEach(id=>{
+['filtroCofre','filtroCategoria','filtroMes','filtroTipo'].forEach(id=>{
   document.getElementById(id).addEventListener('change', renderHistorico);
 });
 document.getElementById('filtroLimpar').addEventListener('click', ()=>{
   document.getElementById('filtroCofre').value='';
   document.getElementById('filtroCategoria').value='';
   document.getElementById('filtroMes').value='';
+  document.getElementById('filtroTipo').value='';
   renderHistorico();
 });
 
@@ -2336,6 +2388,7 @@ function renderAll(){
   renderFixas();
   renderContas();
   renderEvolucaoSaldo();
+  renderBalancaMes();
   checkLembreteBackup();
 }
 
@@ -2600,23 +2653,16 @@ document.getElementById('iosInstallFechar').addEventListener('click', ()=>{
 
 // ---------- corrige a barra de baixo brigando com o teclado do iOS ----------
 // no iPhone (principalmente instalado como app), o teclado abre e o iOS não
-// redimensiona a página do jeito esperado — a barra fixa de navegação fica
-// "perdida" no meio da tela em vez de sumir atrás do teclado.
-// solução: acompanhar o viewport visual (o pedaço da tela que realmente
-// sobrou acima do teclado) e esconder a nav enquanto ele estiver menor.
+// redimensiona a página do jeito esperado. em vez de esconder o menu (os
+// botões têm que continuar sempre visíveis), a gente empurra a barra pra
+// cima, encostada bem no topo do teclado — ela nunca some.
 if(window.visualViewport){
   const nav = document.querySelector('nav');
-  let navEscondida = false;
   function ajustarNavTeclado(){
     if(!nav || window.innerWidth > 640) return; // só relevante no layout mobile (nav fixa embaixo)
-    const encolheu = (window.innerHeight - window.visualViewport.height) > 120; // teclado provavelmente aberto
-    if(encolheu && !navEscondida){
-      nav.style.transform = 'translateY(120%)';
-      navEscondida = true;
-    } else if(!encolheu && navEscondida){
-      nav.style.transform = '';
-      navEscondida = false;
-    }
+    const vv = window.visualViewport;
+    const alturaTeclado = window.innerHeight - vv.height - vv.offsetTop;
+    nav.style.transform = alturaTeclado > 80 ? `translateY(-${alturaTeclado}px)` : '';
   }
   window.visualViewport.addEventListener('resize', ajustarNavTeclado);
   window.visualViewport.addEventListener('scroll', ajustarNavTeclado);
