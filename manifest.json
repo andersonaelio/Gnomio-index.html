@@ -2,7 +2,7 @@
   "name": "Gnômio — o goblin da sua grana",
   "short_name": "Gnômio",
   "description": "Gestão financeira pessoal com um goblin sarcástico de guarda.",
-  "start_url": "./gnomio-v2.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

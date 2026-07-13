@@ -1,5 +1,5 @@
-const CACHE_NAME = 'gnomio-v1';
-const APP_SHELL = ['./gnomio-v2.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'gnomio-v2';
+const APP_SHELL = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(APP_SHELL)));
