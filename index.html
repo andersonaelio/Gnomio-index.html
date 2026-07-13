@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Gnômio</title>
 <meta name="description" content="Gnômio — seu cofre pessoal tem dono agora. Controle de gastos 100% local, com um goblin de olho.">
 <meta property="og:title" content="Gnômio">
@@ -80,7 +80,7 @@
     100%{background-position:8% 6%, 92% 94%, 0 0;}
   }
   @media (prefers-reduced-motion: reduce){ body{animation:none;} }
-  .wrap{max-width:980px; margin:0 auto; padding:28px 20px 80px; position:relative; z-index:2;}
+  .wrap{max-width:980px; margin:0 auto; padding:calc(28px + env(safe-area-inset-top)) 20px 80px; position:relative; z-index:2;}
   a{color:var(--accent);}
 
   /* SPLASH */
@@ -515,7 +515,7 @@
   }
 
   @media (max-width:640px){
-    .wrap{padding:20px 14px 110px;} /* espaço pra nav inferior */
+    .wrap{padding:calc(20px + env(safe-area-inset-top)) 14px 110px;} /* espaço pra nav inferior + notch */
     form.manual{grid-template-columns:1fr 1fr;}
     form.manual button[type="submit"], form.manual button#filtroLimpar{grid-column:1/-1;}
     .hero .saldo-valor{font-size:2.1rem;}
@@ -529,6 +529,7 @@
     /* nav no alcance do polegar */
     nav{
       position:fixed; top:auto; bottom:0; left:0; right:0; z-index:60;
+      transition:transform .2s var(--ease-out);
       margin:0; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
       overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch;
       border-top:1px solid var(--border);
@@ -2596,6 +2597,30 @@ document.getElementById('btnInstallIos').addEventListener('click', ()=>{
 document.getElementById('iosInstallFechar').addEventListener('click', ()=>{
   document.getElementById('iosInstallOverlay').style.display = 'none';
 });
+
+// ---------- corrige a barra de baixo brigando com o teclado do iOS ----------
+// no iPhone (principalmente instalado como app), o teclado abre e o iOS não
+// redimensiona a página do jeito esperado — a barra fixa de navegação fica
+// "perdida" no meio da tela em vez de sumir atrás do teclado.
+// solução: acompanhar o viewport visual (o pedaço da tela que realmente
+// sobrou acima do teclado) e esconder a nav enquanto ele estiver menor.
+if(window.visualViewport){
+  const nav = document.querySelector('nav');
+  let navEscondida = false;
+  function ajustarNavTeclado(){
+    if(!nav || window.innerWidth > 640) return; // só relevante no layout mobile (nav fixa embaixo)
+    const encolheu = (window.innerHeight - window.visualViewport.height) > 120; // teclado provavelmente aberto
+    if(encolheu && !navEscondida){
+      nav.style.transform = 'translateY(120%)';
+      navEscondida = true;
+    } else if(!encolheu && navEscondida){
+      nav.style.transform = '';
+      navEscondida = false;
+    }
+  }
+  window.visualViewport.addEventListener('resize', ajustarNavTeclado);
+  window.visualViewport.addEventListener('scroll', ajustarNavTeclado);
+}
 </script>
 </body>
 </html>
