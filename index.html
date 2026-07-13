@@ -517,8 +517,8 @@
   @media (max-width:640px){
     .wrap{padding:20px 14px 110px;} /* espaço pra nav inferior */
     form.manual{grid-template-columns:1fr 1fr;}
-    form.manual button[type="submit"]{grid-column:1/-1;}
-    .hero .saldo-valor{font-size:2.1rem; text-shadow:0 0 18px rgba(242,181,68,0.24);}
+    form.manual button[type="submit"], form.manual button#filtroLimpar{grid-column:1/-1;}
+    .hero .saldo-valor{font-size:2.1rem;}
     .hero-main{flex-direction:column-reverse; align-items:flex-start; gap:12px;}
     .hero-mascote{flex-direction:row; max-width:none; align-items:center; text-align:left;}
     .hero-mascote .icon{width:56px; height:56px;}
@@ -543,6 +543,37 @@
     .feed{max-height:300px;}
     #toastArea{left:20px;}
     #goblinSpy{bottom:150px;} /* acima da nav inferior */
+
+    /* cartões de osso — empilha em vez de espremer numa linha só */
+    .item-osso, .fixa-item, .conta-item{
+      flex-wrap:wrap; padding:12px 14px;
+    }
+    .item-osso > div:first-child, .fixa-item > div:first-child, .conta-item .left{
+      min-width:0; flex:1 1 auto;
+    }
+    .item-osso .nome, .fixa-item .nome, .conta-item .nome{
+      overflow-wrap:break-word;
+    }
+    .conta-item .valores{text-align:right; flex-shrink:0;}
+    .conta-item .left{min-width:0;}
+    .conta-item .left > div{min-width:0;}
+
+    /* edição inline de lançamento — empilha os campos em vez de 4 colunas espremidas */
+    .edit-osso-grid{grid-template-columns:1fr 1fr; grid-template-areas:"data conta" "categoria valor";}
+    .edit-osso-grid input[type="date"]{grid-area:data;}
+    .edit-osso-grid .edit-conta{grid-area:conta;}
+    .edit-osso-grid .edit-categoria{grid-area:categoria;}
+    .edit-osso-grid .edit-valor{grid-area:valor;}
+    .item-osso:has(.edit-osso-grid){flex-direction:column; align-items:stretch;}
+
+    /* mapa do tesouro — tudo empilhado, trilha não espreme */
+    .mapa-tesouro{padding:18px;}
+    .mapa-tesouro .valor-atual{font-size:1.6rem;}
+    .mapa-tesouro .acoes{flex-direction:column;}
+    .mapa-tesouro .item-osso .valor{font-size:.84rem;}
+
+    /* histórico: filtros empilham igual o resto dos formulários */
+    #formFiltroHistorico{grid-template-columns:1fr 1fr;}
   }
 </style>
 </head>
