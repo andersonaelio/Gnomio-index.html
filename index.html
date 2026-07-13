@@ -40,6 +40,13 @@
     --accent2-hover:#f0c65a;
     --on-accent2:#231a06;
     --goblin:#7fd98f;
+    /* etiquetas de osso — usadas em cofres, contas fixas e lançamentos: papel claro sobre a página escura */
+    --bone:#f7efda;
+    --bone-dim:#e7ddc0;
+    --ink:#2a2416;
+    --ink-soft:#8a7f5e;
+    --ink-good:#1e5c3a;
+    --ink-bad:#b03a2e;
     /* bordas discretas — linha de baixa opacidade, não contorno colorido */
     --border:rgba(255,240,210,0.07);
     --border2:rgba(255,240,210,0.13);
@@ -283,55 +290,64 @@
   .tipo-toggle button.on.gasto{background:var(--bad); color:#2b0d06; border-color:var(--bad); box-shadow:inset 0 1px 0 rgba(255,220,200,0.35);}
   .tipo-toggle button.on.receita{background:var(--good); color:#152b09; border-color:var(--good); box-shadow:inset 0 1px 0 rgba(230,255,210,0.35);}
 
-  table{width:100%; border-collapse:collapse; font-size:.86rem;}
-  th{text-align:left; color:var(--muted); font-weight:700; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; padding:8px 10px; border-bottom:1px solid var(--border2);}
-  td{padding:9px 10px; border-bottom:1px solid var(--border);}
-  tr:last-child td{border-bottom:none;}
-  .tag{display:inline-block; padding:3px 10px; border-radius:999px; font-size:.74rem; font-weight:700; background:#080706; border:1px solid var(--border2); box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);}
+  .tag{display:inline-block; padding:3px 10px; border-radius:999px; font-size:.72rem; font-weight:800; background:var(--map-bg,#123227); color:var(--bone,#f7efda); border:1px solid rgba(247,239,218,0.15);}
   .valor.gasto{color:var(--bad); font-weight:800;}
   .valor.receita{color:var(--good); font-weight:800;}
   .del{cursor:pointer; color:var(--muted); border:none; background:none; font-size:.95rem;}
   .edit{cursor:pointer; color:var(--muted); border:none; background:none; font-size:.9rem; margin-right:6px;}
   .del:hover, .edit:hover{color:var(--text);}
-  #tabelaRecentes input, #tabelaRecentes select, #tabelaHistorico input, #tabelaHistorico select{
-    background:#080706; border:1px solid var(--border); color:var(--text);
-    padding:5px 7px; border-radius:6px; font-size:.8rem; font-family:var(--f-body); width:100%;
-    box-shadow:inset 0 1px 3px rgba(0,0,0,0.45);
-  }
   .del:hover{color:var(--bad);}
 
   .empty{color:var(--muted); text-align:center; padding:24px; font-size:.9rem;}
 
-  .fixa-item{ /* fichas de cobrança na mesa */
-    background:linear-gradient(180deg, var(--lvl3), var(--panel));
-    border:1px solid var(--border);
-    border-radius:10px; padding:14px 16px; margin-bottom:10px;
+  /* ===== cartões de osso — item pinçado sobre a página escura ===== */
+  .item-osso, .fixa-item, .conta-item{
+    background:var(--bone,#f7efda); border-radius:10px; padding:13px 16px; margin-bottom:9px;
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    box-shadow:inset 0 1px 0 rgba(233,200,130,0.06), 0 1px 0 rgba(0,0,0,0.35);
+    box-shadow:0 2px 5px rgba(0,0,0,0.28), inset 0 -1px 0 rgba(42,36,22,0.06);
   }
-  .fixa-item .nome{font-weight:800; font-size:.92rem;}
-  .fixa-item .meta{color:var(--muted); font-size:.76rem; margin-top:2px;}
-  .fixa-item .right{display:flex; align-items:center; gap:10px;}
-  .fixa-item .valor-fixa{font-family:var(--f-head); font-weight:800; font-size:.95rem;}
-  .status-pago{background:rgba(143,191,106,0.14); color:var(--good); font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px;}
-  .status-agendado{background:rgba(217,169,68,0.14); color:var(--accent); font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px;}
+  .item-osso .nome{color:var(--ink,#2a2416); font-weight:800; font-size:.9rem;}
+  .item-osso .data, .item-osso .meta{color:var(--ink-soft,#8a7f5e); font-size:.75rem; margin-top:2px;}
+  .item-osso .valor{font-weight:800; font-size:.9rem;}
+  .item-osso .valor.ganho{color:var(--ink-good,#1e5c3a);}
+  .item-osso .valor.perda{color:var(--ink-bad,#b03a2e);}
+  .item-osso .osso-btn{cursor:pointer; background:none; border:none; color:var(--ink-soft,#8a7f5e); font-size:.9rem; padding:2px;}
+  .item-osso .osso-btn:hover{color:var(--ink,#2a2416);}
+  .item-osso-lista{cursor:default;}
+  .edit-osso-grid{display:grid; grid-template-columns:1fr 1fr 1fr 100px; gap:6px; flex:1;}
+  .edit-osso-grid input, .edit-osso-grid select{
+    background:#fff; border:1px solid rgba(42,36,22,0.2); color:var(--ink,#2a2416);
+    padding:6px 8px; border-radius:6px; font-size:.8rem; font-family:var(--f-body); width:100%;
+  }
 
-  .conta-item{ /* cofres na estante */
-    background:linear-gradient(180deg, var(--lvl3), var(--panel));
-    border-radius:10px; padding:16px; margin-bottom:10px;
-    display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid var(--border);
-    box-shadow:inset 0 1px 0 rgba(233,200,130,0.06), 0 1px 0 rgba(0,0,0,0.35);
+  .fixa-item .nome{font-weight:800; font-size:.92rem; color:var(--ink,#2a2416);}
+  .fixa-item .meta{color:var(--ink-soft,#8a7f5e); font-size:.76rem;}
+  .fixa-item .right{display:flex; align-items:center; gap:10px;}
+  .fixa-item .valor-fixa{font-family:var(--f-head); font-weight:800; font-size:.95rem; color:var(--ink,#2a2416);}
+  .fixa-item .valor-fixa.gasto{color:var(--ink-bad,#b03a2e);}
+  .fixa-item .valor-fixa.receita{color:var(--ink-good,#1e5c3a);}
+  .status-pago{background:rgba(30,92,58,0.12); color:var(--ink-good,#1e5c3a); font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px;}
+  .status-agendado{background:rgba(169,129,44,0.16); color:#8a651c; font-size:.7rem; font-weight:800; padding:4px 10px; border-radius:999px;}
+
+  .conta-item{ /* cofre — ficha de osso na estante */
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
-  .conta-item.rende{border-color:rgba(143,191,106,0.35);}
-  .conta-item.negativa{border-color:rgba(217,106,82,0.4);}
+  .conta-item.rende{box-shadow:0 2px 5px rgba(0,0,0,0.28), inset 0 0 0 2px rgba(30,92,58,0.35);}
+  .conta-item.negativa{box-shadow:0 2px 5px rgba(0,0,0,0.28), inset 0 0 0 2px rgba(176,58,46,0.4);}
   .conta-item .left{display:flex; align-items:center; gap:10px;}
-  .conta-item .badge{width:38px; height:38px; border-radius:9px; background:rgba(255,240,210,0.05); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .conta-item .nome{font-weight:800; font-size:.92rem;}
-  .conta-item .meta{color:var(--muted); font-size:.76rem; margin-top:2px;}
+  .conta-item .badge{width:38px; height:38px; border-radius:9px; background:rgba(42,36,22,0.06); border:1px solid rgba(42,36,22,0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .conta-item .nome{font-weight:800; font-size:.92rem; color:var(--ink,#2a2416);}
+  .conta-item .meta{color:var(--ink-soft,#8a7f5e); font-size:.76rem; margin-top:2px;}
   .conta-item .valores{text-align:right;}
-  .conta-item .saldo{font-family:var(--f-head); font-weight:800; font-size:1.05rem; text-shadow:0 1px 0 rgba(0,0,0,0.5);}
-  .conta-item .rend{font-size:.74rem; font-weight:800; color:var(--good); margin-top:2px;}
-  .conta-item .rend.neg{color:var(--bad);}
+  .conta-item .saldo{font-family:var(--f-head); font-weight:800; font-size:1.05rem; color:var(--ink,#2a2416);}
+  .conta-item .rend{font-size:.74rem; font-weight:800; color:var(--ink-good,#1e5c3a); margin-top:2px;}
+  .conta-item .rend.neg{color:var(--ink-bad,#b03a2e);}
+  .conta-item .del, .conta-item .edit, .fixa-item .del{color:var(--ink-soft,#8a7f5e);}
+  .conta-item .del:hover, .fixa-item .del:hover{color:var(--ink-bad,#b03a2e);}
+  .conta-item .edit:hover{color:var(--ink,#2a2416);}
+  .conta-item input, .fixa-item input.confirmar-valor-fixa{
+    background:#fff !important; border:1px solid rgba(42,36,22,0.25) !important; color:var(--ink,#2a2416) !important;
+  }
 
   .bar-row{display:grid; grid-template-columns:110px 1fr 70px; align-items:center; gap:10px; margin-bottom:10px; font-size:.85rem;}
   .bar-track{height:10px; background:#060504; border-radius:999px; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);} /* canaleta gravada */
@@ -440,6 +456,60 @@
   #tourOverlay{background:rgba(9,7,4,0.9) !important;}
   .conquista.unlocked{transition:transform .2s var(--ease-out);}
   .conquista.unlocked:hover{transform:translateY(-3px);}
+
+  /* ===== MAPA DO TESOURO — encarte de papel dentro do livro-caixa escuro ===== */
+  .mapa-tesouro{
+    --map-bg:#123227; --map-bg2:#0f2b21; --bone:#f7efda; --bone-dim:#e7ddc0;
+    --ink-good:#1e5c3a; --ink-bad:#b03a2e; --map-gold:#f2d06b; --map-gold-deep:#a9812c;
+    position:relative; border-radius:var(--radius); padding:22px; margin-bottom:16px;
+    background:linear-gradient(155deg, var(--map-bg), var(--map-bg2));
+    border:1px solid rgba(247,239,218,0.14);
+    box-shadow:var(--elev-2);
+    color:var(--bone);
+  }
+  .mapa-tesouro .cabecalho{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;}
+  .mapa-tesouro .titulo{font-family:var(--f-head); font-weight:800; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--bone-dim); opacity:.8;}
+  .mapa-tesouro .nome-cofre{font-family:var(--f-head); font-weight:800; font-size:1.05rem; margin-top:2px;}
+  .mapa-tesouro .faltam{font-size:.82rem; color:var(--bone-dim); margin-top:14px;}
+  .mapa-tesouro .valores-meta{display:flex; align-items:baseline; gap:8px; margin-top:2px;}
+  .mapa-tesouro .valor-atual{font-family:var(--f-head); font-weight:800; font-size:2rem; color:var(--map-gold);}
+  .mapa-tesouro .valor-alvo{font-size:.92rem; color:var(--bone-dim);}
+  .mapa-tesouro .trilha{display:flex; align-items:center; gap:0; margin:18px 0 16px;}
+  .mapa-tesouro .trilha-track{
+    flex:1; height:2px; border-top:3px dotted rgba(247,239,218,0.35); position:relative;
+  }
+  .mapa-tesouro .trilha-fill{
+    position:absolute; top:-3px; left:0; height:2px; border-top:3px dotted var(--map-gold);
+  }
+  .mapa-tesouro .marco{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:.7rem; font-weight:800; box-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  .mapa-tesouro .marco.inicio{background:var(--bone); color:var(--map-bg); width:14px; height:14px;}
+  .mapa-tesouro .marco.fim{background:var(--map-gold); color:var(--map-bg2); border:2px solid var(--map-gold-deep);}
+  .mapa-tesouro .marco.fim.chegou{background:var(--ink-good); color:var(--bone); border-color:var(--ink-good);}
+  .mapa-tesouro .item-osso{
+    background:var(--bone); border-radius:12px; padding:12px 16px; margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .mapa-tesouro .item-osso .nome{color:#2a2416; font-weight:800; font-size:.86rem;}
+  .mapa-tesouro .item-osso .data{color:#8a7f5e; font-size:.72rem; margin-top:1px;}
+  .mapa-tesouro .item-osso .valor{font-weight:800; font-size:.92rem;}
+  .mapa-tesouro .item-osso .valor.ganho{color:var(--ink-good);}
+  .mapa-tesouro .item-osso .valor.perda{color:var(--ink-bad);}
+  .mapa-tesouro .acoes{display:flex; gap:10px; margin-top:16px;}
+  .mapa-tesouro .btn-cavar{
+    flex:1; background:linear-gradient(180deg, var(--map-gold), var(--map-gold-deep)); color:#2a2005;
+    border:1px solid var(--map-gold-deep); border-radius:999px; padding:11px; font-weight:800;
+    font-family:var(--f-head); cursor:pointer; font-size:.85rem;
+  }
+  .mapa-tesouro .btn-trilha{
+    background:none; color:var(--bone); border:1px solid rgba(247,239,218,0.4); border-radius:999px;
+    padding:11px 18px; font-weight:800; font-family:var(--f-head); cursor:pointer; font-size:.85rem;
+  }
+  .mapa-tesouro .btn-cavar:hover{background:linear-gradient(180deg, #ffe08a, var(--map-gold));}
+  .mapa-tesouro .btn-trilha:hover{border-color:var(--bone);}
+
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{animation-duration:.01ms !important; transition-duration:.01ms !important;}
   }
@@ -611,10 +681,7 @@
 
     <div class="card">
       <h2>últimos lançamentos</h2>
-      <table id="tabelaRecentes">
-        <thead><tr><th>Data</th><th>Cofre</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div id="tabelaRecentes"></div>
       <div class="empty" id="recentesEmpty" style="display:none;">Nada lançado ainda. Vai lá na aba "lançar" 👉</div>
     </div>
   </section>
@@ -679,6 +746,7 @@
 
   <!-- CONTAS -->
   <section id="tab-contas" style="display:none;">
+    <div id="mapasTesouro"></div>
     <div class="card">
       <h2>novo cofre</h2>
       <form class="manual" id="formConta">
@@ -713,6 +781,10 @@
             <option value="mes">% ao mês</option>
             <option value="ano">% ao ano</option>
           </select>
+        </div>
+        <div class="field">
+          <label>Meta de poupança (opcional)</label>
+          <input type="number" step="0.01" id="cMeta" placeholder="ex: 2000">
         </div>
         <button type="submit">Adicionar</button>
       </form>
@@ -796,10 +868,7 @@
         </div>
         <button type="button" id="filtroLimpar">limpar filtros</button>
       </form>
-      <table id="tabelaHistorico">
-        <thead><tr><th>Data</th><th>Cofre</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div id="tabelaHistorico"></div>
       <div class="empty" id="historicoEmpty" style="display:none;">Nada encontrado com esses filtros.</div>
     </div>
   </section>
@@ -1091,8 +1160,9 @@ document.getElementById('formConta').addEventListener('submit', e=>{
   const saldoInicial = parseFloat(document.getElementById('cSaldo').value)||0;
   const taxa = parseFloat(document.getElementById('cTaxa').value)||0;
   const periodo = document.getElementById('cPeriodo').value;
+  const metaValor = parseFloat(document.getElementById('cMeta').value) || null;
   if(!nome) return;
-  state.contas.push({id:uid(), nome, saldoInicial, taxa, periodo, criadaEm: todayISO(), ultimoRendimento: currentMonthKey()});
+  state.contas.push({id:uid(), nome, saldoInicial, taxa, periodo, criadaEm: todayISO(), ultimoRendimento: currentMonthKey(), meta: metaValor});
   saveState();
   e.target.reset();
   document.getElementById('cTaxa').value = 0;
@@ -1231,6 +1301,75 @@ function renderCdiInfo(){
     : `CDI estimado: <b>${v}% a.a.</b> · sem internet ainda, atualizo quando conectar.`;
 }
 
+function renderMapasTesouro(){
+  const wrap = document.getElementById('mapasTesouro');
+  if(!wrap) return;
+  const comMeta = state.contas.filter(c=>c.meta && c.meta>0);
+  wrap.innerHTML = comMeta.map(c=>{
+    const atual = Math.max(0, saldoConta(c));
+    const alvo = c.meta;
+    const pct = Math.min(100, (atual/alvo)*100);
+    const falta = Math.max(0, alvo-atual);
+    const chegou = atual>=alvo;
+    const ultimasDoCofre = state.transacoes.filter(t=>t.contaId===c.id).sort((a,b)=>b.data.localeCompare(a.data)).slice(0,3);
+    const itensHtml = ultimasDoCofre.length ? ultimasDoCofre.map(t=>`
+      <div class="item-osso">
+        <div>
+          <div class="nome">${esc(t.categoria)}</div>
+          <div class="data">${t.data.split('-').reverse().join('/')}</div>
+        </div>
+        <div class="valor ${t.tipo==='receita'?'ganho':'perda'}">${t.tipo==='receita'?'+':'−'} ${brl(t.valor)}</div>
+      </div>
+    `).join('') : `<div style="color:var(--bone-dim); font-size:.8rem; padding:6px 2px;">nenhum lançamento nesse cofre ainda.</div>`;
+    return `
+      <div class="mapa-tesouro" data-conta-id="${c.id}">
+        <div class="cabecalho">
+          <div>
+            <div class="titulo">mapa do tesouro</div>
+            <div class="nome-cofre">${esc(c.nome)}</div>
+          </div>
+        </div>
+        <div class="faltam">${chegou ? 'tesouro alcançado!' : `faltam pro X do mapa`}</div>
+        <div class="valores-meta">
+          <div class="valor-atual">${brl(atual)}</div>
+          <div class="valor-alvo">de ${brl(alvo)}${!chegou ? ` <span style="color:var(--map-gold);">(faltam ${brl(falta)})</span>` : ''}</div>
+        </div>
+        <div class="trilha">
+          <div class="marco inicio"></div>
+          <div class="trilha-track"><div class="trilha-fill" style="width:${pct}%;"></div></div>
+          <div class="marco fim ${chegou?'chegou':''}">${chegou?'✓':'X'}</div>
+        </div>
+        ${itensHtml}
+        <div class="acoes">
+          <button class="btn-cavar" data-act="cavar" data-conta="${c.id}">cavar mais fundo</button>
+          <button class="btn-trilha" data-act="trilha" data-conta="${c.id}">trilha</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  wrap.querySelectorAll('[data-act="cavar"]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const conta = state.contas.find(c=>c.id===btn.dataset.conta);
+      document.querySelector('nav button[data-tab="lancar"]').click();
+      setTimeout(()=>{
+        document.getElementById('chatInput').value = `guardei X reais no ${conta?conta.nome:'cofre'}`;
+        document.getElementById('chatInput').focus();
+        document.getElementById('chatInput').setSelectionRange(8,9);
+      }, 100);
+    });
+  });
+  wrap.querySelectorAll('[data-act="trilha"]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelector('nav button[data-tab="historico"]').click();
+      setTimeout(()=>{
+        document.getElementById('filtroCofre').value = btn.dataset.conta;
+        renderHistorico();
+      }, 100);
+    });
+  });
+}
+
 let editingContaId = null;
 function renderContas(){
   renderCdiInfo();
@@ -1257,18 +1396,21 @@ function renderContas(){
           <div class="badge">${c.taxa>0?ICON_GNOMO:ICON_BANK}</div>
           <div>
             <div class="nome">${esc(c.nome)}</div>
-            <div class="meta">saldo real hoje:</div>
+            <div class="meta">saldo real hoje / meta de poupança:</div>
           </div>
         </div>
-        <div class="valores" style="display:flex; gap:6px; align-items:center;">
-          <input type="number" step="0.01" class="edit-saldo-conta" value="${saldo.toFixed(2)}" style="width:110px; background:var(--panel2); border:1px solid var(--border2); color:var(--text); padding:6px 8px; border-radius:8px; font-family:var(--f-body);">
+        <div class="valores" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <input type="number" step="0.01" class="edit-saldo-conta" value="${saldo.toFixed(2)}" placeholder="saldo" style="width:100px; background:var(--panel2); border:1px solid var(--border2); color:var(--text); padding:6px 8px; border-radius:8px; font-family:var(--f-body);">
+          <input type="number" step="0.01" class="edit-meta-conta" value="${c.meta||''}" placeholder="meta (opcional)" style="width:110px; background:var(--panel2); border:1px solid var(--border2); color:var(--text); padding:6px 8px; border-radius:8px; font-family:var(--f-body);">
           <button class="edit" data-act="salvar-saldo">✓</button>
           <button class="del" data-act="cancelar-saldo">✕</button>
         </div>
       `;
       div.querySelector('[data-act="salvar-saldo"]').addEventListener('click', ()=>{
         const novo = parseFloat(div.querySelector('.edit-saldo-conta').value);
+        const novaMeta = parseFloat(div.querySelector('.edit-meta-conta').value);
         if(isNaN(novo)){ alert('Valor inválido.'); return; }
+        c.meta = isNaN(novaMeta) ? null : novaMeta;
         editingContaId = null;
         ajustarSaldoContaSilencioso(c, novo);
         renderAll();
@@ -1280,7 +1422,7 @@ function renderContas(){
           <div class="badge">${c.taxa>0?ICON_GNOMO:ICON_BANK}</div>
           <div>
             <div class="nome">${esc(c.nome)}</div>
-            <div class="meta">${sub}</div>
+            <div class="meta">${sub}${c.meta ? ` · meta ${brl(c.meta)}` : ''}</div>
           </div>
         </div>
         <div class="valores">
@@ -1288,7 +1430,7 @@ function renderContas(){
           ${rend>0.005 ? `<div class="rend">+${brl(rend)} rendendo</div>` : (saldo<0 ? `<div class="rend neg">no vermelho</div>` : '')}
           ${Math.abs(futuro)>0.005 ? `<div class="rend" style="color:var(--muted);">${futuro>0?'+':''}${brl(futuro)} agendado</div>` : ''}
         </div>
-        <button class="edit" data-act="ajustar" title="ajustar saldo">✎</button>
+        <button class="edit" data-act="ajustar" title="ajustar saldo/meta">✎</button>
         <button class="del" data-act="apagar">✕</button>
       `;
       div.querySelector('[data-act="ajustar"]').addEventListener('click', ()=>{ editingContaId = c.id; renderContas(); });
@@ -1296,6 +1438,7 @@ function renderContas(){
     }
     wrap.appendChild(div);
   });
+  renderMapasTesouro();
 }
 
 // ---------- form manual ----------
@@ -1363,30 +1506,33 @@ function delTransacao(id){
 
 // ---------- edição inline de lançamentos (usado no painel e no histórico) ----------
 let editingTransId = null;
-function renderTransacoesTable(tbody, lista){
-  tbody.innerHTML = '';
+function renderTransacoesTable(container, lista){
+  container.innerHTML = '';
   lista.forEach(t=>{
-    const tr = document.createElement('tr');
+    const item = document.createElement('div');
+    item.className = 'item-osso item-osso-lista';
     if(editingTransId === t.id){
       const opts = state.contas.map(c=>`<option value="${c.id}" ${c.id===t.contaId?'selected':''}>${esc(c.nome)}</option>`).join('');
-      tr.innerHTML = `
-        <td><input type="date" class="edit-data" value="${t.data}"></td>
-        <td><select class="edit-conta">${opts}</select></td>
-        <td><input type="text" class="edit-categoria" value="${esc(t.categoria)}" list="categoriasList"></td>
-        <td><input type="number" step="0.01" class="edit-valor" value="${t.valor}"></td>
-        <td style="white-space:nowrap;">
-          <button class="edit" data-act="salvar">✓</button>
-          <button class="del" data-act="cancelar">✕</button>
-        </td>
+      item.innerHTML = `
+        <div class="edit-osso-grid">
+          <input type="date" class="edit-data" value="${t.data}">
+          <select class="edit-conta">${opts}</select>
+          <input type="text" class="edit-categoria" value="${esc(t.categoria)}" list="categoriasList">
+          <input type="number" step="0.01" class="edit-valor" value="${t.valor}">
+        </div>
+        <div style="display:flex; gap:6px; flex-shrink:0;">
+          <button class="osso-btn" data-act="salvar">✓</button>
+          <button class="osso-btn" data-act="cancelar">✕</button>
+        </div>
       `;
-      tr.querySelector('[data-act="salvar"]').addEventListener('click', ()=>{
-        const novoValor = parseFloat(tr.querySelector('.edit-valor').value);
+      item.querySelector('[data-act="salvar"]').addEventListener('click', ()=>{
+        const novoValor = parseFloat(item.querySelector('.edit-valor').value);
         if(!novoValor || novoValor<=0){ alert('Valor inválido.'); return; }
         const real = state.transacoes.find(x=>x.id===t.id);
         if(real){
-          real.data = tr.querySelector('.edit-data').value || t.data;
-          real.contaId = tr.querySelector('.edit-conta').value;
-          real.categoria = (tr.querySelector('.edit-categoria').value.trim() || 'outros').toLowerCase();
+          real.data = item.querySelector('.edit-data').value || t.data;
+          real.contaId = item.querySelector('.edit-conta').value;
+          real.categoria = (item.querySelector('.edit-categoria').value.trim() || 'outros').toLowerCase();
           real.valor = Math.abs(novoValor);
           saveState();
         }
@@ -1394,28 +1540,32 @@ function renderTransacoesTable(tbody, lista){
         renderAll();
         if(document.getElementById('tab-historico').style.display!=='none') renderHistorico();
       });
-      tr.querySelector('[data-act="cancelar"]').addEventListener('click', ()=>{
+      item.querySelector('[data-act="cancelar"]').addEventListener('click', ()=>{
         editingTransId = null;
         renderAll();
         if(document.getElementById('tab-historico').style.display!=='none') renderHistorico();
       });
     } else {
       const contaNome = (state.contas.find(c=>c.id===t.contaId)||{}).nome || '—';
-      tr.innerHTML = `
-        <td>${t.data.split('-').reverse().join('/')}</td>
-        <td>${esc(contaNome)}</td>
-        <td><span class="tag">${esc(t.categoria)}</span></td>
-        <td class="valor ${t.tipo}">${t.tipo==='gasto'?'-':'+'}${brl(t.valor)}</td>
-        <td style="white-space:nowrap;"><button class="edit" data-act="editar">✎</button><button class="del" data-act="apagar">✕</button></td>
+      item.innerHTML = `
+        <div>
+          <div class="nome">${esc(t.categoria)}</div>
+          <div class="data">${t.data.split('-').reverse().join('/')} · ${esc(contaNome)}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="valor ${t.tipo==='receita'?'ganho':'perda'}">${t.tipo==='gasto'?'−':'+'} ${brl(t.valor)}</div>
+          <button class="osso-btn" data-act="editar">✎</button>
+          <button class="osso-btn" data-act="apagar">✕</button>
+        </div>
       `;
-      tr.querySelector('[data-act="editar"]').addEventListener('click', ()=>{
+      item.querySelector('[data-act="editar"]').addEventListener('click', ()=>{
         editingTransId = t.id;
         renderAll();
         if(document.getElementById('tab-historico').style.display!=='none') renderHistorico();
       });
-      tr.querySelector('[data-act="apagar"]').addEventListener('click', ()=>delTransacao(t.id));
+      item.querySelector('[data-act="apagar"]').addEventListener('click', ()=>delTransacao(t.id));
     }
-    tbody.appendChild(tr);
+    container.appendChild(item);
   });
 }
 function preencherFiltrosHistorico(){
@@ -1440,7 +1590,7 @@ function renderHistorico(){
   if(mes) lista = lista.filter(t=>monthKey(t.data)===mes);
   lista.sort((a,b)=>b.data.localeCompare(a.data) || 0);
   document.getElementById('historicoEmpty').style.display = lista.length===0 ? 'block' : 'none';
-  renderTransacoesTable(document.querySelector('#tabelaHistorico tbody'), lista);
+  renderTransacoesTable(document.getElementById('tabelaHistorico'), lista);
 }
 ['filtroCofre','filtroCategoria','filtroMes'].forEach(id=>{
   document.getElementById(id).addEventListener('change', renderHistorico);
@@ -2016,7 +2166,9 @@ const CONQUISTAS = [
         if(dif>=7) return true;
       }
       return false;
-    }}
+    }},
+  {id:'x-marca-local', nome:'X marca o local', desc:'chegou ao fim de um mapa do tesouro. achou o baú.', tipo:'gnomo',
+    check: s => s.contas.some(c=>c.meta && c.meta>0 && saldoConta(c)>=c.meta)}
 ];
 
 function checkConquistas(){
@@ -2145,10 +2297,10 @@ function renderAll(){
   }
   renderMetas();
 
-  const tbody = document.querySelector('#tabelaRecentes tbody');
+  const containerRecentes = document.getElementById('tabelaRecentes');
   const recentes = [...state.transacoes].sort((a,b)=>b.data.localeCompare(a.data) || 0).slice(0,10);
   document.getElementById('recentesEmpty').style.display = recentes.length===0 ? 'block' : 'none';
-  renderTransacoesTable(tbody, recentes);
+  renderTransacoesTable(containerRecentes, recentes);
   preencherCategoriasDatalist();
 
   renderFixas();
