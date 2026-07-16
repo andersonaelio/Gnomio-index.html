@@ -2041,8 +2041,16 @@ document.getElementById('iaRemover').addEventListener('click', ()=>{
 const IA_SYS = `Você é o Goblin do Gnômio: um contador sovina, canalha e ácido, que cuida (a contragosto) do dinheiro do usuário. Você não é gentil — implica, zoa, ironiza cada gasto bobo, mas nunca mente nos números nem deixa de fazer o trabalho direito. Pense num agiota engraçado que descumpre etiqueta mas é honesto nas contas. Responda SEMPRE e SOMENTE com JSON válido, sem markdown, neste formato:
 {"acoes":[{"tipo":"gasto","valor":0,"categoria":"","contaId":"","data":"YYYY-MM-DD"}],"resposta":"sua fala"}
 Regras:
-- tipo é "gasto", "receita" ou "saldo".
+- tipo é "gasto", "receita", "saldo" ou "editar_ultimo".
 - gasto/receita: lançamentos; valor positivo. Se a mensagem citar vários lançamentos, crie uma ação para cada um.
+- VOCABULÁRIO DE PAGAMENTO — o usuário fala como fala no dia a dia brasileiro, entenda todas essas formas:
+  - "à vista", "de uma vez", "no débito", "no pix", "dinheiro" → é um pagamento ÚNICO, comum, NÃO é parcela. Um gasto só, valor cheio, data de hoje (ou a citada).
+  - "em Nx", "N vezes", "parcelado em N", "dividido em N", "no crédito em N" → COMPRA PARCELADA, veja regra abaixo.
+  - "entrada de X e o resto em N vezes de Y" / "dei entrada de X, mais N parcelas de Y" → a entrada é um gasto isolado hoje (categoria igual às parcelas), e depois crie N ações de parcela como abaixo — total de N+1 ações.
+  - "mensalidade", "assinatura", "todo mês" sem número de parcelas definido → isso NÃO é parcela (não tem fim definido); trate como um gasto único de hoje e, na resposta, sugira o usuário cadastrar como "conta fixa" pela aba própria pra repetir sozinho todo mês.
+- COMPRA PARCELADA ("em 4x", "3 vezes", "parcelado em 6x de 100"): crie uma ação de gasto PRA CADA parcela (ex: 4x → 4 ações), todas com a MESMA categoria, mesmo contaId, valor = valor de cada parcela (se disse "4x de 200", cada ação vale 200; se disse "parcelei 800 em 4x", divida 800/4=200 por ação). As datas começam em "hoje" (do campo hoje nos dados atuais) e pulam um mês por parcela (parcela 1 = hoje, parcela 2 = mesmo dia do mês seguinte, e assim por diante) — calcule os meses seguintes você mesmo a partir da data de hoje fornecida, inclusive virada de ano. Lançamentos com data futura ficam agendados sozinhos, não precisa avisar sobre isso.
+- CORREÇÃO DO QUE VOCÊ ACABOU DE LANÇAR: se a mensagem do usuário é claramente uma correção ou ajuste do que ELE MESMO disse na mensagem anterior desta conversa (ex: "não, foi 80", "errei, é uber não é mercado", "muda pra 50", "na verdade paguei 30"), NÃO crie um lançamento novo — use tipo "editar_ultimo" com o campo que mudou (valor e/ou categoria). Só use isso se o contexto da conversa deixar claro que é correção do lançamento imediatamente anterior, não um gasto novo parecido.
+- NUNCA CONFUNDA "cofre" COM PARCELA/DÍVIDA: "cofre" é SÓ o lugar onde dinheiro fica guardado (tipo "saldo"). Uma frase descrevendo uma dívida, boleto ou compra "dividida em N meses" — mesmo se o usuário usar as palavras "conta fixa" no sentido comum de "uma conta que peguei pra pagar" — NÃO tem nada a ver com cofre nem com criar conta nova. Isso é a regra de COMPRA PARCELADA acima: crie N ações de gasto. O app também tem uma aba separada chamada "contas fixas" pra despesas recorrentes (aluguel, assinatura) que SE REPETEM todo mês sem fim definido — você não consegue criar isso pelo chat; se a frase realmente descrever algo recorrente sem fim (não "dividido em N meses", que tem fim), explique rapidamente que é só cadastrar na aba "contas fixas". Na dúvida entre parcela e conta fixa recorrente, "dividida/parcelada em N meses" = parcela (tem fim, N ações de gasto); "todo mês", "mensalidade" sem número = recorrente sem fim (sugira a aba). De qualquer forma, JAMAIS mencione ou proponha criar "cofre" nesses casos.
 - categoria: curta, minúscula, e deve descrever a CAUSA REAL do gasto/receita (mercado, uber, luz, salário, lazer, roubo, perda...) — nunca a primeira palavra "que parece categoria" na frase. Palavras soltas, desabafos ou interjeições no início da mensagem NÃO são a categoria a menos que sejam claramente o item comprado. Ex: "Banana. Me roubaram. R$ 6,00." → categoria "roubo" (banana ali é desabafo, não o motivo do gasto). Ex: "Comprei uma banana, 6 reais" → categoria "mercado" ou "lanche" (aí sim é o item). Se o motivo real não ficar claro, use "outros" em vez de chutar uma palavra da frase.
 - saldo: o usuário declarou quanto TEM guardado numa conta; valor = saldo total declarado. contaId de conta existente ou "nova:Nome" para criar conta nova.
 - contaId: use o id da conta citada; se nenhuma for citada em gasto/receita, use a primeira da lista.
@@ -2066,8 +2074,11 @@ function iaContexto(){
   });
 }
 
+let ultimaIACriadosIds = []; // rastreia o que a IA acabou de lançar nesta conversa, pra dar de corrigir depois
+
 function aplicarAcoesIA(acoes){
   let idsCriados = [];
+  let algumaEdicao = false;
   (acoes||[]).forEach(a=>{
     if(!a || !a.tipo) return;
     if(a.tipo==='saldo'){
@@ -2087,9 +2098,20 @@ function aplicarAcoesIA(acoes){
       const contaId = state.contas.find(c=>c.id===a.contaId) ? a.contaId : state.contas[0].id;
       const t = addTransacao({tipo:a.tipo, valor:v, categoria:String(a.categoria||'outros').toLowerCase(), data:(a.data||todayISO()), nota:'via IA', contaId});
       idsCriados.push(t.id);
+    } else if(a.tipo==='editar_ultimo'){
+      // corrige o(s) lançamento(s) que a própria IA acabou de criar nesta conversa
+      ultimaIACriadosIds.forEach(id=>{
+        const real = state.transacoes.find(t=>t.id===id);
+        if(!real) return;
+        if(a.valor!=null && !isNaN(Number(a.valor)) && Number(a.valor)>0) real.valor = Math.abs(Number(a.valor));
+        if(a.categoria) real.categoria = String(a.categoria).toLowerCase();
+        algumaEdicao = true;
+      });
+      saveState();
     }
   });
-  if(idsCriados.length){ renderAll(); checkConquistas(); }
+  if(idsCriados.length) ultimaIACriadosIds = idsCriados; // só atualiza o "último lote" quando cria algo novo de verdade
+  if(idsCriados.length || algumaEdicao){ renderAll(); checkConquistas(); }
   return idsCriados;
 }
 
@@ -2347,8 +2369,8 @@ function renderAll(){
   document.getElementById('pillEntradas').textContent = 'entrou ' + brl(entradas);
   document.getElementById('pillSaidas').textContent = 'saiu ' + brl(saidas);
   const sobraEl = document.getElementById('statSobra');
-  sobraEl.classList.toggle('good', entradas-saidas>=0);
-  sobraEl.classList.toggle('bad', entradas-saidas<0);
+  sobraEl.classList.remove('good','bad');
+  sobraEl.style.color = 'var(--accent)';
   setStat('statSobra', brl(entradas-saidas));
 
   const gastosPorCat = {};
